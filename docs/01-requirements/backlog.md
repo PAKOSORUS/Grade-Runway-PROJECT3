@@ -21,7 +21,8 @@
 | FR-14 | ผู้ตรวจตัดสินข้อความเชิงลบ (ไม่ปฏิเสธอัตโนมัติ) | [[20261014-02-peer-advice-chat#4. Functional Requirements]] | Backlog |
 | FR-15 | ปฏิเสธพร้อมเหตุผลและแจ้งผู้ส่ง | [[20261014-02-peer-advice-chat#4. Functional Requirements]] | Backlog |
 | FR-16 | ตรวจสิทธิ์ผู้ส่งตามเกณฑ์ผู้ผ่านเกณฑ์ | [[20261014-02-peer-advice-chat#4. Functional Requirements]] | Backlog |
-| FR-20 | ส่งข้อความเข้าห้องรวม ทุกคนเห็นเมื่ออนุมัติ (ระดับรอผู้ใช้ยืนยัน) | [[20261016-02-peer-chat-recipients-lock-resubmit#4. Functional Requirements]] | Backlog |
+| FR-20 | ส่งข้อความเข้าห้องรวม ทุกคนเห็นเมื่ออนุมัติ | [[20261016-02-peer-chat-recipients-lock-resubmit#4. Functional Requirements]] | Backlog |
+| FR-24 | ปฏิเสธคำตัดสินหลังล็อกถูกปลดอัตโนมัติ แจ้งผู้ตรวจ ข้อความกลับเข้าคิว (ระดับรอผู้ใช้ยืนยัน) | [[20261016-03-first-sync-failure-and-expired-lock-decision#4. Functional Requirements]] | Backlog |
 | NFR-04 | ความปลอดภัยของเนื้อหา (ผู้รับไม่เห็นข้อความที่ยังไม่อนุมัติ/ถูกปฏิเสธ) | [[20261014-02-peer-advice-chat#5. Non-functional Requirements]] | Backlog |
 | NFR-05 | ความรับผิดชอบ/audit trail ของการตรวจข้อความ | [[20261014-02-peer-advice-chat#5. Non-functional Requirements]] | Backlog |
 
@@ -33,9 +34,10 @@
 | FR-07 | มุมมองครู/อาจารย์ที่ปรึกษา | [[20261014-01-student-risk-alert#4. Functional Requirements]] | Backlog |
 | NFR-03 | ความทันสมัยของข้อมูล (ความถี่ซิงก์ยังไม่กำหนด) | [[20261014-01-student-risk-alert#5. Non-functional Requirements]] | Backlog |
 | FR-18 | กันตรวจซ้ำระหว่างผู้ตรวจ | [[20261014-02-peer-advice-chat#4. Functional Requirements]] | Backlog |
-| FR-19 | จัดการซิงก์ล้มเหลว (ใช้ข้อมูลล่าสุด + แจ้ง admin + ป้ายข้อมูลไม่ทันสมัย) (ระดับรอผู้ใช้ยืนยัน) | [[20261016-01-sync-failure-handling#4. Functional Requirements]] | Backlog |
-| FR-21 | ปลดล็อกข้อความที่ผู้ตรวจค้าง (อัตโนมัติ + admin ด้วยมือ) (ระดับรอผู้ใช้ยืนยัน) | [[20261016-02-peer-chat-recipients-lock-resubmit#4. Functional Requirements]] | Backlog |
-| FR-22 | ส่งข้อความใหม่หลังถูกปฏิเสธ (ข้อความเดิมปิดถาวร เก็บความสัมพันธ์ใน audit trail) (ระดับรอผู้ใช้ยืนยัน) | [[20261016-02-peer-chat-recipients-lock-resubmit#4. Functional Requirements]] | Backlog |
+| FR-19 | จัดการซิงก์ล้มเหลว (ใช้ข้อมูลล่าสุด + แจ้ง admin + ป้ายข้อมูลไม่ทันสมัย) | [[20261016-01-sync-failure-handling#4. Functional Requirements]] | Backlog |
+| FR-23 | ซิงก์ครั้งแรกล้มเหลวโดยไม่มีข้อมูลเดิม (ไม่ประเมินความเสี่ยง แจ้ง admin ป้ายรอข้อมูล) (ระดับรอผู้ใช้ยืนยัน) | [[20261016-03-first-sync-failure-and-expired-lock-decision#4. Functional Requirements]] | Backlog |
+| FR-21 | ปลดล็อกข้อความที่ผู้ตรวจค้าง (อัตโนมัติ + อาจารย์/admin ด้วยมือ) | [[20261016-02-peer-chat-recipients-lock-resubmit#4. Functional Requirements]] | Backlog |
+| FR-22 | ส่งข้อความใหม่หลังถูกปฏิเสธ (ข้อความเดิมปิดถาวร เก็บความสัมพันธ์ใน audit trail) | [[20261016-02-peer-chat-recipients-lock-resubmit#4. Functional Requirements]] | Backlog |
 | NFR-06 | ความเป็นส่วนตัว (การแสดงชื่อผู้ส่ง ยังไม่กำหนด) | [[20261014-02-peer-advice-chat#5. Non-functional Requirements]] | Backlog |
 
 ## ระดับความสำคัญ: ต่ำ
