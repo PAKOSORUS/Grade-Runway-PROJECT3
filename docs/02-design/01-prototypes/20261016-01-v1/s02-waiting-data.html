@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grade Runway — รอข้อมูลซิงก์</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="s02-waiting-data">
+<main class="main" id="content">
+  <h1 data-en="My study situation">สถานการณ์การเรียนของฉัน</h1>
+
+  <div class="demo-bar">
+    <div class="caption" data-en="Prototype only: simulate the first successful sync">เฉพาะ prototype: จำลองการซิงก์สำเร็จครั้งแรก</div>
+    <button type="button" class="btn" data-show="ws-done" data-en="Simulate first successful sync">จำลอง: ซิงก์สำเร็จครั้งแรก</button>
+    <button type="button" class="btn-link" data-show="ws-wait" data-en="Reset">รีเซ็ต</button>
+  </div>
+
+  <section id="ws-wait" data-g="ws">
+    <div class="alert info"><div class="a-body"><div class="a-title" data-en="Waiting for data">รอข้อมูลซิงก์</div>
+      <div data-en="The system has not received your grades, attendance or assignments yet, so it cannot evaluate anything. This message disappears automatically after the first successful sync. (FR-23)">ระบบยังไม่ได้รับข้อมูลเกรด การเข้าเรียน และการส่งงานของคุณ จึงยังไม่ประเมินใดๆ ข้อความนี้หายเองเมื่อซิงก์สำเร็จครั้งแรก (FR-23)</div></div></div>
+    <div class="card">
+      <div class="card-b center stack">
+        <div class="placeholder-img" aria-hidden="true">&hellip;</div>
+        <p class="muted" data-en="No risk level, alert or advice is shown while waiting. This is not a sign that you are doing well or badly.">ระหว่างรอ จะไม่แสดงระดับความเสี่ยง การแจ้งเตือน หรือคำแนะนำใดๆ ไม่ได้หมายความว่าผลการเรียนของคุณดีหรือไม่ดี</p>
+        <p class="caption"><span class="ph" data-en="sample">ตัวอย่าง</span> <span data-en="The admin has been notified about the failed first sync.">ผู้ดูแลระบบได้รับแจ้งเรื่องซิงก์ครั้งแรกล้มเหลวแล้ว</span></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="ws-done" data-g="ws" hidden>
+    <div class="alert ok"><div class="a-body"><div class="a-title" data-en="Data received">ได้รับข้อมูลแล้ว</div><div data-en="The waiting badge is gone and normal evaluation is back.">ป้ายรอข้อมูลหายแล้ว และระบบกลับมาประเมินตามปกติ</div></div></div>
+    <a class="btn btn-primary" href="s01-dashboard.html" data-en="Open dashboard">เปิดแดชบอร์ด</a>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

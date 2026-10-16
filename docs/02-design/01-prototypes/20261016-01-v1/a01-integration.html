@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grade Runway — การเชื่อมต่อและซิงก์</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="a01-integration">
+<main class="main" id="content">
+  <h1 data-en="Integration &amp; Sync">การเชื่อมต่อและซิงก์ข้อมูล</h1>
+
+  <div class="demo-bar">
+    <div class="caption" data-en="Prototype only: simulate a sync result to see what the admin and students see">เฉพาะ prototype: จำลองผลซิงก์เพื่อดูสิ่งที่ผู้ดูแลระบบและผู้เรียนเห็น</div>
+    <div class="seg" role="group" aria-label="Simulate">
+      <button type="button" class="active" aria-pressed="true" data-show="sc-ok" data-en="Sync succeeded">ซิงก์สำเร็จ</button>
+      <button type="button" aria-pressed="false" data-show="sc-fail" data-en="Failed (has earlier data)">ล้มเหลว (เคยมีข้อมูล)</button>
+      <button type="button" aria-pressed="false" data-show="sc-first" data-en="First sync failed (no data)">ล้มเหลวครั้งแรก (ไม่มีข้อมูลเดิม)</button>
+    </div>
+  </div>
+
+  <section class="card">
+    <div class="card-h"><h2 data-en="Connection to existing system (LMS / registrar) · FR-01">การเชื่อมต่อระบบเดิม (LMS / ทะเบียน) · FR-01</h2></div>
+    <div class="card-b">
+      <div class="filters">
+        <div class="field"><label for="ep" data-en="API endpoint">API endpoint</label><input id="ep" type="text" value="https://lms.example.edu/api/v1"><span class="hint"><span class="ph" data-en="sample">ตัวอย่าง</span> <span data-en="The real system is not specified yet">ระบบเดิมจริงยังไม่ระบุ</span></span></div>
+        <div class="field"><label for="tk" data-en="Access token">โทเคนเข้าถึง</label><input id="tk" type="password" value="sample-token"></div>
+        <div class="field"><label for="fq" data-en="Sync frequency (NFR-03)">ความถี่ซิงก์ (NFR-03)</label>
+          <select id="fq"><option data-en="Not specified (sample: daily)">ยังไม่กำหนด (ตัวอย่าง: รายวัน)</option><option data-en="Sample: every 6 hours">ตัวอย่าง: ทุก 6 ชั่วโมง</option><option data-en="Sample: hourly">ตัวอย่าง: ทุกชั่วโมง</option></select>
+          <span class="hint"><span class="ph" data-en="sample">ตัวอย่าง</span> <span data-en="Frequency is undecided in the spec">spec ยังไม่กำหนดความถี่</span></span></div>
+      </div>
+      <div class="row mt-4">
+        <button type="button" class="btn btn-secondary" data-toast="ทดสอบการเชื่อมต่อ: สำเร็จ (จำลอง)" data-toast-en="Connection test: OK (simulated)" data-en="Test connection">ทดสอบการเชื่อมต่อ</button>
+        <button type="button" class="btn btn-primary" data-toast="บันทึกการเชื่อมต่อแล้ว (จำลอง)" data-toast-en="Connection saved (simulated)" data-en="Save">บันทึก</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-h"><h2 data-en="Latest sync status">สถานะการซิงก์ล่าสุด</h2><span class="caption" data-en="Data: grades, attendance, submissions">ข้อมูล: เกรด การเข้าเรียน การส่งงาน</span></div>
+    <div class="card-b">
+      <div id="sc-ok" data-g="sc">
+        <div class="alert ok"><div class="a-body"><div class="a-title" data-en="Sync succeeded">ซิงก์สำเร็จ</div><div data-en="Last success: 16 Oct 2026 06:00. 1,240 learners updated. Students see no data badge.">สำเร็จล่าสุด 16 ต.ค. 2026 06:00 อัปเดตผู้เรียน 1,240 คน ผู้เรียนไม่เห็นป้ายข้อมูลไม่ทันสมัย</div></div></div>
+      </div>
+      <div id="sc-fail" data-g="sc" hidden>
+        <div class="alert warn"><div class="a-body"><div class="a-title" data-en="Sync failed — using latest successful data (FR-19)">ซิงก์ล้มเหลว — ใช้ข้อมูลซิงก์ล่าสุดที่สำเร็จต่อ (FR-19)</div>
+          <div data-en="Cause: API timeout. Last successful data: 15 Oct 2026 06:00. Risk evaluation continues on that data.">สาเหตุ: API หมดเวลา ข้อมูลที่สำเร็จล่าสุด 15 ต.ค. 2026 06:00 การประเมินความเสี่ยงยังใช้ข้อมูลชุดนี้</div></div></div>
+        <div class="alert info"><div class="a-body"><div class="a-title" data-en="Admin notified">แจ้งผู้ดูแลระบบแล้ว</div><div><span data-en="Notification channel:">ช่องทางแจ้ง:</span> <span class="ph" data-en="sample: in-app">ตัวอย่าง: in-app</span> <span class="caption" data-en="(channel not specified in the spec)">(spec ยังไม่กำหนดช่องทาง)</span></div></div></div>
+        <p data-en="What learners see until the next successful sync:">สิ่งที่ผู้เรียนเห็นจนกว่าซิงก์สำเร็จ:</p>
+        <span class="badge info" data-en="Data outdated">ข้อมูลไม่ทันสมัย</span>
+        <a class="btn-link" href="s01-dashboard.html" data-en="See student dashboard">ดูแดชบอร์ดผู้เรียน</a>
+      </div>
+      <div id="sc-first" data-g="sc" hidden>
+        <div class="alert danger"><div class="a-body"><div class="a-title" data-en="First sync failed — no earlier data (FR-23)">ซิงก์ครั้งแรกล้มเหลว — ยังไม่เคยมีข้อมูล (FR-23)</div>
+          <div data-en="The system does not evaluate risk for anyone and notified the admin. Learners see the waiting-for-data badge only. It disappears after the first successful sync.">ระบบไม่ประเมินความเสี่ยงของผู้ใดและแจ้งผู้ดูแลระบบแล้ว ผู้เรียนเห็นเพียงป้ายรอข้อมูล ป้ายหายเมื่อซิงก์สำเร็จครั้งแรก</div></div></div>
+        <p data-en="What learners see:">สิ่งที่ผู้เรียนเห็น:</p>
+        <span class="badge info" data-en="Waiting for data">รอข้อมูลซิงก์</span>
+        <a class="btn-link" href="s02-waiting-data.html" data-en="See the waiting screen">ดูหน้าจอรอข้อมูล</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-h"><h2 data-en="Sync log">ประวัติการซิงก์</h2><span class="ph" data-en="sample data">ข้อมูลตัวอย่าง</span></div>
+    <div class="card-b flush tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th class="sort" data-en="Time">เวลา</th><th data-en="Result">ผลลัพธ์</th><th data-en="Records">จำนวนเรคอร์ด</th><th data-en="Reason">สาเหตุ</th></tr></thead>
+        <tbody>
+          <tr><td class="c">16 Oct 2026 06:00</td><td class="c"><span class="badge ok" data-en="Success">สำเร็จ</span></td><td class="c">1,240</td><td>-</td></tr>
+          <tr><td class="c">15 Oct 2026 06:00</td><td class="c"><span class="badge ok" data-en="Success">สำเร็จ</span></td><td class="c">1,238</td><td>-</td></tr>
+          <tr><td class="c">14 Oct 2026 06:00</td><td class="c"><span class="badge danger" data-en="Failed">ล้มเหลว</span></td><td class="c">0</td><td data-en="Incomplete or malformed data">ข้อมูลไม่ครบ/ผิดรูปแบบ</td></tr>
+          <tr><td class="c">13 Oct 2026 06:00</td><td class="c"><span class="badge danger" data-en="Failed">ล้มเหลว</span></td><td class="c">0</td><td data-en="API unavailable">API ล่ม</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="row end"><a class="btn btn-primary" href="a02-thresholds.html" data-en="Next: set thresholds">ถัดไป: ตั้งค่า threshold</a></div>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

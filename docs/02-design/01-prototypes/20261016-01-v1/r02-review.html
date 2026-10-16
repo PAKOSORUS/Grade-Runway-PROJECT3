@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grade Runway — ตรวจข้อความ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="r02-review">
+<main class="main" id="content">
+  <p><a href="r01-queue.html" data-en="&lt; Back to queue">&lt; กลับคิวรออนุมัติ</a></p>
+  <h1 data-en="Review message M-0007">ตรวจข้อความ M-0007</h1>
+
+  <div class="alert info" id="lock-active"><div class="a-body"><div class="a-title" data-en="You hold the lock (FR-18)">คุณล็อกข้อความนี้อยู่ (FR-18)</div>
+    <div><span data-en="Time left before auto-unlock:">เวลาที่เหลือก่อนปลดล็อกอัตโนมัติ:</span> <b id="countdown">29:59</b> <span class="ph" data-en="T_unlock sample = 30 min">T_unlock ตัวอย่าง = 30 นาที</span></div>
+    <div class="caption" data-en="Others cannot decide this message while you hold the lock.">ผู้ตรวจคนอื่นตัดสินข้อความนี้ไม่ได้ขณะที่คุณถือล็อก</div></div></div>
+  <div class="alert warn" id="lock-expired" hidden><div class="a-body"><div class="a-title" data-en="Your lock was released automatically (FR-21)">ล็อกของคุณถูกปลดอัตโนมัติแล้ว (FR-21)</div>
+    <div data-en="The message went back to the queue. Any decision you press now will be refused.">ข้อความกลับเข้าคิวแล้ว คำตัดสินที่คุณกดตอนนี้จะถูกปฏิเสธ</div></div></div>
+  <div class="alert danger" id="fr24-alert" hidden role="alert"><div class="a-body"><div class="a-title" data-en="Decision refused and not recorded (FR-24)">คำตัดสินถูกปฏิเสธและไม่ถูกบันทึก (FR-24)</div>
+    <div data-en="Your lock had expired, so this decision was not saved. The message is still in the approval queue and was not approved.">ล็อกของคุณหมดอายุแล้ว จึงไม่บันทึกคำตัดสินนี้ ข้อความยังอยู่ในคิวรออนุมัติและไม่ถูกอนุมัติ</div>
+    <a href="r01-queue.html" data-en="Back to queue">กลับคิวรออนุมัติ</a></div></div>
+
+  <div class="demo-bar">
+    <div class="caption" data-en="Prototype only: simulate that the lock expires before you decide">เฉพาะ prototype: จำลองว่าล็อกหมดอายุก่อนที่คุณจะตัดสิน</div>
+    <button type="button" class="btn btn-sm" id="btn-expire" data-en="Simulate lock expiry">จำลองล็อกหมดอายุ</button>
+  </div>
+
+  <div class="grid-2">
+    <section class="card">
+      <div class="card-h"><h2 data-en="Message">ข้อความ</h2><span class="badge info" data-en="Pending approval">รออนุมัติ</span></div>
+      <div class="card-b">
+        <p data-en="Do the weekly problem set before the lecture, not after. It made the lecture much easier to follow for me.">ทำโจทย์ประจำสัปดาห์ก่อนเข้าเลคเชอร์ ไม่ใช่หลังเรียน ทำให้ฟังเลคเชอร์เข้าใจง่ายขึ้นมาก</p>
+        <dl class="kv"><dt data-en="Sent by">ผู้ส่ง</dt><dd data-en="Pran Example (6X-00011)">ปราณ ตัวอย่าง (6X-00011)</dd><dt data-en="Sent">ส่งเมื่อ</dt><dd>16 Oct 2026 08:40</dd></dl>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-h"><h2 data-en="Your review">การตรวจของคุณ</h2></div>
+      <div class="card-b">
+        <form id="review-form" onsubmit="return false">
+          <div class="field">
+            <span class="lbl" id="cls-l" data-en="1. Mark the message (required, FR-12)">1. ระบุลักษณะข้อความ (จำเป็น, FR-12)</span>
+            <div class="choices" role="radiogroup" aria-labelledby="cls-l">
+              <label class="choice"><input type="radio" name="cls" id="cls-non" value="non"><span data-en="Not negative">ไม่เชิงลบ</span></label>
+              <label class="choice"><input type="radio" name="cls" id="cls-neg" value="neg"><span data-en="Negative">เชิงลบ</span></label>
+            </div>
+            <span class="hint" id="cls-hint" data-en="You cannot approve until you choose one.">ต้องเลือกก่อนจึงจะอนุมัติได้</span>
+          </div>
+          <div class="alert info mt-4" id="neg-note" hidden><div class="a-body" data-en="Negative messages are not rejected automatically. You decide to approve or reject (FR-14).">ข้อความเชิงลบไม่ถูกปฏิเสธอัตโนมัติ คุณเป็นผู้ตัดสินว่าจะอนุมัติหรือปฏิเสธ (FR-14)</div></div>
+
+          <div class="mt-4">
+            <button type="button" class="btn btn-sm" id="btn-ai" data-en="Ask AI to suggest (optional)">ให้ AI ช่วยเสนอผล (ไม่บังคับ)</button>
+            <span class="ph" data-en="Could have (FR-17)">ฟีเจอร์ระดับต่ำ (FR-17)</span>
+          </div>
+          <div class="alert info mt-4" id="ai-result" hidden><div class="a-body"><div class="a-title" data-en="AI suggests: Not negative">AI เสนอ: ไม่เชิงลบ</div>
+            <div class="caption" data-en="Suggestion only. You make the final decision.">เป็นข้อเสนอเท่านั้น ผู้ตรวจเป็นผู้ตัดสินขั้นสุดท้าย</div>
+            <button type="button" class="btn btn-sm mt-4" id="btn-ai-use" data-en="Use this suggestion">ใช้ข้อเสนอนี้</button></div></div>
+
+          <div id="decision-area" class="mt-6">
+            <b class="lbl" data-en="2. Decide (FR-13)">2. ตัดสิน (FR-13)</b>
+            <div class="row mt-4">
+              <button type="button" class="btn btn-primary" id="btn-approve" disabled data-en="Approve">อนุมัติ</button>
+              <button type="button" class="btn btn-danger" id="btn-reject" data-en="Reject">ปฏิเสธ</button>
+            </div>
+            <div id="reject-box" class="mt-4" hidden>
+              <div class="field" id="reason-field">
+                <label for="reason-text" data-en="Rejection reason (required, FR-15)">เหตุผลการปฏิเสธ (จำเป็น, FR-15)</label>
+                <textarea id="reason-text"></textarea>
+                <span class="err-msg" data-en="Enter a reason before rejecting. The sender will receive it.">กรอกเหตุผลก่อนปฏิเสธ ผู้ส่งจะได้รับเหตุผลนี้</span>
+              </div>
+              <div class="row end mt-4"><button type="button" class="btn btn-danger" id="btn-reject-confirm" data-en="Confirm reject">ยืนยันปฏิเสธ</button></div>
+            </div>
+          </div>
+        </form>
+
+        <div id="result-approve" hidden>
+          <div class="alert ok"><div class="a-body"><div class="a-title" data-en="Approved">อนุมัติแล้ว</div><div data-en="The message now appears in the shared room. Recorded in the audit trail: who, decision, negative or not (NFR-05).">ข้อความปรากฏในห้องรวมแล้ว บันทึกใน audit trail: ใคร ผลตัดสิน เชิงลบ/ไม่เชิงลบ (NFR-05)</div></div></div>
+          <div class="row"><a class="btn btn-primary" href="r01-queue.html" data-en="Next message">ข้อความถัดไป</a><a class="btn" href="r03-audit.html" data-en="Open audit trail">เปิดประวัติการตรวจ</a></div>
+        </div>
+        <div id="result-reject" hidden>
+          <div class="alert ok"><div class="a-body"><div class="a-title" data-en="Rejected and sender notified">ปฏิเสธแล้วและแจ้งผู้ส่งแล้ว</div><div data-en="The sender received your reason (FR-15). The message is closed permanently; the sender may create a new one (FR-22). Recorded in the audit trail (NFR-05).">ผู้ส่งได้รับเหตุผลของคุณ (FR-15) ข้อความปิดถาวร ผู้ส่งสร้างข้อความใหม่ได้ (FR-22) บันทึกใน audit trail (NFR-05)</div></div></div>
+          <div class="row"><a class="btn btn-primary" href="r01-queue.html" data-en="Next message">ข้อความถัดไป</a><a class="btn" href="r03-audit.html" data-en="Open audit trail">เปิดประวัติการตรวจ</a></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

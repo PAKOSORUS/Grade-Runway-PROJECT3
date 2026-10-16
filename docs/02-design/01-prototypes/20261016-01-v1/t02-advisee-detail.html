@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grade Runway — รายละเอียดผู้เรียน</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="t02-advisee-detail">
+<main class="main" id="content">
+  <p><a href="t01-advisees.html" data-en="&lt; Back to advisees">&lt; กลับรายการผู้เรียนในความดูแล</a></p>
+  <h1 data-en="Somjai Example (6X-00001)">สมใจ ตัวอย่าง (6X-00001)</h1>
+
+  <div class="row" style="margin-bottom:var(--space-4)">
+    <span class="badge danger" data-en="At risk">เสี่ยงสูง</span>
+    <span class="badge info" data-en="Data outdated">ข้อมูลไม่ทันสมัย</span>
+    <span class="caption" data-en="Last successful sync: 15 Oct 2026 06:00 (FR-19)">ซิงก์สำเร็จล่าสุด: 15 ต.ค. 2026 06:00 (FR-19)</span>
+  </div>
+
+  <div class="seg" role="group" aria-label="Tabs">
+    <button type="button" class="active" aria-pressed="true" data-show="tab-now" data-en="Situation">สถานการณ์</button>
+    <button type="button" aria-pressed="false" data-show="tab-hist" data-en="History">ประวัติ</button>
+  </div>
+
+  <div id="tab-now" data-g="tab" class="mt-4">
+    <div class="alert danger"><div class="a-body"><div class="a-title" data-en="Latest alert: 16 Oct 2026 06:05 — 2 conditions met (NFR-02)">แจ้งเตือนล่าสุด: 16 ต.ค. 2026 06:05 — เข้าเงื่อนไข 2 ข้อ (NFR-02)</div>
+      <div data-en="Reasons: attendance 68% (below 75%); grade declined 3 terms in a row.">เหตุผล: เข้าเรียน 68% (ต่ำกว่า 75%); เกรดลดลงต่อเนื่อง 3 ภาค</div></div></div>
+    <section class="card">
+      <div class="card-h"><h2 data-en="Situation by variable (FR-07)">สถานการณ์แยกตามตัวแปร (FR-07)</h2><span class="ph" data-en="sample data">ข้อมูลตัวอย่าง</span></div>
+      <div class="card-b flush tbl-wrap"><table class="tbl">
+        <thead><tr><th data-en="Variable">ตัวแปร</th><th data-en="Value">ค่า</th><th data-en="Threshold (sample)">เกณฑ์ (ตัวอย่าง)</th><th data-en="Status">สถานะ</th></tr></thead>
+        <tbody>
+          <tr><td data-en="Grade / GPA">เกรด/ผลการเรียน</td><td class="c">2.10</td><td class="c">&lt; 2.25</td><td class="c"><span class="badge danger" data-en="Condition met">เข้าเงื่อนไข</span></td></tr>
+          <tr><td data-en="Attendance">การเข้าเรียน</td><td class="c">68%</td><td class="c">&lt; 75%</td><td class="c"><span class="badge danger" data-en="Condition met">เข้าเงื่อนไข</span></td></tr>
+          <tr><td data-en="Assignment submission">การส่งงาน</td><td class="c">80%</td><td class="c">&lt; 70%</td><td class="c"><span class="badge ok" data-en="Normal">ปกติ</span></td></tr>
+          <tr><td data-en="Grade trend">แนวโน้มผลการเรียน</td><td class="c">3.10 &rarr; 2.70 &rarr; 2.10</td><td class="c" data-en="Declines 2 terms in a row">ลดลงต่อเนื่อง 2 ภาค</td><td class="c"><span class="badge danger" data-en="Condition met">เข้าเงื่อนไข</span></td></tr>
+        </tbody></table></div>
+    </section>
+    <p class="caption" data-en="Privacy (NFR-01): you can open this learner because they are in your care. Learners outside your care cannot be opened.">ความเป็นส่วนตัว (NFR-01): คุณเปิดผู้เรียนคนนี้ได้เพราะอยู่ในความดูแลของคุณ ผู้เรียนนอกความดูแลเปิดไม่ได้</p>
+  </div>
+
+  <div id="tab-hist" data-g="tab" class="mt-4" hidden>
+    <section class="card">
+      <div class="card-h"><h2 data-en="Alert and advice history (FR-09)">ประวัติการแจ้งเตือนและคำแนะนำ (FR-09)</h2><span class="ph" data-en="sample data">ข้อมูลตัวอย่าง</span></div>
+      <div class="card-b flush tbl-wrap"><table class="tbl">
+        <thead><tr><th class="sort" data-en="Date">วันที่</th><th data-en="Type">ประเภท</th><th data-en="Level">ระดับ</th><th data-en="Detail">รายละเอียด</th></tr></thead>
+        <tbody>
+          <tr><td class="c">16 Oct 2026</td><td class="c" data-en="Alert">แจ้งเตือน</td><td class="c"><span class="badge danger" data-en="At risk">เสี่ยงสูง</span></td><td data-en="Attendance 68%; grade declined 3 terms">เข้าเรียน 68%; เกรดลดลง 3 ภาค</td></tr>
+          <tr><td class="c">16 Oct 2026</td><td class="c" data-en="Advice">คำแนะนำ</td><td class="c">-</td><td data-en="Attend more of MATH101">เข้าเรียน MATH101 ให้มากขึ้น</td></tr>
+          <tr><td class="c">02 Oct 2026</td><td class="c" data-en="Alert">แจ้งเตือน</td><td class="c"><span class="badge warn" data-en="Warning">เฝ้าระวัง</span></td><td data-en="Attendance 72%">เข้าเรียน 72%</td></tr>
+        </tbody></table></div>
+    </section>
+  </div>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

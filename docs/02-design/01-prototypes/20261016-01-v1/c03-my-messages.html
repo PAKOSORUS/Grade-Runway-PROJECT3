@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grade Runway — ข้อความของฉัน</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="c03-my-messages">
+<main class="main" id="content">
+  <h1 data-en="My messages">ข้อความของฉัน</h1>
+
+  <div class="alert danger"><div class="a-body"><div class="a-title" data-en="Message M-0003 was rejected (FR-15)">ข้อความ M-0003 ถูกปฏิเสธ (FR-15)</div>
+    <div data-en="Reason: contains a negative remark about a classmate.">เหตุผล: มีถ้อยคำเชิงลบต่อเพื่อนนักศึกษา</div>
+    <a href="c02-compose.html#resubmit" data-en="Create a new message">สร้างข้อความใหม่</a></div><button type="button" class="a-close" data-dismiss aria-label="Close">&times;</button></div>
+
+  <section class="card">
+    <div class="card-h"><h2 data-en="Messages I sent">ข้อความที่ฉันส่ง</h2><span class="ph" data-en="sample data">ข้อมูลตัวอย่าง</span></div>
+    <div class="card-b flush tbl-wrap"><table class="tbl">
+      <thead><tr><th>ID</th><th class="sort" data-en="Sent">ส่งเมื่อ</th><th data-en="Message">ข้อความ</th><th data-en="Status">สถานะ</th><th data-en="Note">หมายเหตุ</th><th></th></tr></thead>
+      <tbody>
+        <tr><td class="c">M-0009</td><td class="c">16 Oct 2026</td><td data-en="Start the weekly review on Sunday evening...">เริ่มทบทวนประจำสัปดาห์ทุกเย็นวันอาทิตย์...</td><td class="c"><span class="badge info" data-en="Pending approval">รออนุมัติ</span></td><td data-en="New message replacing M-0003">ข้อความใหม่แทน M-0003</td><td></td></tr>
+        <tr><td class="c">M-0003</td><td class="c">14 Oct 2026</td><td data-en="Some classmates just copy answers...">เพื่อนบางคนก็แค่ลอกคำตอบ...</td><td class="c"><span class="badge danger" data-en="Rejected">ถูกปฏิเสธ</span></td><td data-en="Closed permanently, cannot be edited">ปิดถาวร แก้ไขไม่ได้</td><td class="c"><a class="btn btn-sm" href="c02-compose.html#resubmit" data-en="Send new">ส่งใหม่</a></td></tr>
+        <tr><td class="c">M-0001</td><td class="c">12 Oct 2026</td><td data-en="Do the weekly problem set before the lecture...">ทำโจทย์ประจำสัปดาห์ก่อนเข้าเลคเชอร์...</td><td class="c"><span class="badge ok" data-en="Approved">อนุมัติแล้ว</span></td><td data-en="Visible in the shared room">แสดงในห้องรวมแล้ว</td><td class="c"><a class="btn btn-sm" href="c01-chat-room.html" data-en="Open room">เปิดห้อง</a></td></tr>
+      </tbody></table></div>
+  </section>
+
+  <p class="caption"><span class="ph" data-en="open question">ประเด็นเปิด</span> <span data-en="Whether the sender is notified when a message is approved, and through which channel, is not decided in the spec.">spec ยังไม่กำหนดว่าผู้ส่งได้รับแจ้งเมื่อข้อความอนุมัติหรือไม่ และผ่านช่องทางใด</span></p>
+  <p class="caption" data-en="The receiver side never sees pending or rejected messages (NFR-04); only you can see this list.">ฝั่งผู้อ่านไม่เห็นข้อความที่รออนุมัติหรือถูกปฏิเสธ (NFR-04) รายการนี้เห็นได้เฉพาะคุณ</p>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

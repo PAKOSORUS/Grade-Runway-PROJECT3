@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grade Runway — เขียนข้อความแนะนำ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="c02-compose">
+<main class="main" id="content">
+  <h1 data-en="Write advice">เขียนข้อความแนะนำแนวทางการเรียน</h1>
+
+  <div class="demo-bar">
+    <div class="caption" data-en="Prototype only: simulate the sender eligibility check (FR-16)">เฉพาะ prototype: จำลองผลตรวจสิทธิ์ผู้ส่ง (FR-16)</div>
+    <div class="seg" role="group" aria-label="Eligibility">
+      <button type="button" class="active" aria-pressed="true" data-show="elig-yes" data-en="Eligible">ผ่านเกณฑ์</button>
+      <button type="button" aria-pressed="false" data-show="elig-no" data-en="Not eligible">ไม่ผ่านเกณฑ์</button>
+    </div>
+  </div>
+
+  <section id="elig-no" data-g="elig" hidden>
+    <div class="alert info"><div class="a-body"><div class="a-title" data-en="You cannot send messages yet">คุณยังส่งข้อความไม่ได้</div>
+      <div data-en="Only students who meet the criteria can send advice. The meaning of &quot;meets the criteria&quot; is not defined yet.">เฉพาะนักศึกษาที่ผ่านเกณฑ์เท่านั้นที่ส่งข้อความแนะนำได้ ความหมายของ &quot;ผ่านเกณฑ์&quot; ยังไม่กำหนด</div>
+      <span class="ph" data-en="open question">ประเด็นเปิด</span></div></div>
+    <button type="button" class="btn btn-primary" disabled data-en="Send">ส่งข้อความ</button>
+    <a class="btn" href="c01-chat-room.html" data-en="Read the room instead">ไปอ่านห้องรวมแทน</a>
+  </section>
+
+  <section id="elig-yes" data-g="elig">
+    <div class="alert info" id="resubmit-note" hidden><div class="a-body"><div class="a-title" data-en="New message based on a rejected one (FR-22)">สร้างข้อความใหม่จากข้อความที่ถูกปฏิเสธ (FR-22)</div>
+      <div data-en="The original message M-0003 is closed permanently and cannot be edited. This new message goes through the full review again.">ข้อความเดิม M-0003 ปิดถาวรและแก้ไขไม่ได้ ข้อความใหม่นี้ต้องผ่านการตรวจใหม่ทั้งหมด</div>
+      <div class="caption" data-en="Rejection reason of M-0003: contains a negative remark about a classmate.">เหตุผลที่ M-0003 ถูกปฏิเสธ: มีถ้อยคำเชิงลบต่อเพื่อนนักศึกษา</div></div></div>
+
+    <div id="compose-form">
+      <section class="card">
+        <div class="card-h"><h2 data-en="Message (FR-10)">ข้อความ (FR-10)</h2><span class="badge ok" data-en="Eligible to send">ผ่านเกณฑ์ ส่งได้</span></div>
+        <div class="card-b">
+          <div class="field" id="msg-field">
+            <label for="msg-text" data-en="Advice for other students">คำแนะนำสำหรับนักศึกษาคนอื่น</label>
+            <textarea id="msg-text" placeholder="เขียนแนวทางการเรียนที่ได้ผลสำหรับคุณ" data-en-ph="Write a study approach that worked for you"></textarea>
+            <span class="err-msg" data-en="Write a message of 1 to 500 characters">กรอกข้อความ 1 ถึง 500 ตัวอักษร</span>
+            <span class="hint counter" id="msg-count">0 / 500</span>
+          </div>
+          <p class="hint mt-4" data-en="Sent to the shared room. You do not choose recipients (FR-20). Not real-time chat; no attachments.">ส่งเข้าห้องรวม ไม่ต้องเลือกผู้รับ (FR-20) ไม่ใช่แชทโต้ตอบ real-time และแนบไฟล์ไม่ได้</p>
+          <div class="row end mt-4"><a class="btn" href="c01-chat-room.html" data-en="Cancel">ยกเลิก</a><button type="button" class="btn btn-primary" id="btn-send" data-en="Send">ส่งข้อความ</button></div>
+        </div>
+      </section>
+    </div>
+
+    <div id="sent-panel" hidden>
+      <div class="alert warn"><div class="a-body"><div class="a-title" data-en="Sent — waiting for approval (FR-11)">ส่งแล้ว — รออนุมัติ (FR-11)</div>
+        <div data-en="Nobody else can see your message until a teacher or admin approves it (NFR-04). If it is rejected you will be told the reason.">ยังไม่มีใครเห็นข้อความของคุณจนกว่าอาจารย์หรือ Admin จะอนุมัติ (NFR-04) ถ้าถูกปฏิเสธ คุณจะได้รับแจ้งพร้อมเหตุผล</div></div></div>
+      <div class="row"><span class="badge info" data-en="Pending approval">รออนุมัติ</span><a class="btn btn-primary" href="c03-my-messages.html" data-en="See my messages">ดูข้อความของฉัน</a></div>
+    </div>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

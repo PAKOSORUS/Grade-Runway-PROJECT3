@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grade Runway — แดชบอร์ดผู้เรียน</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="s01-dashboard">
+<main class="main" id="content">
+  <h1 data-en="My study situation">สถานการณ์การเรียนของฉัน</h1>
+
+  <div class="demo-bar">
+    <div class="caption" data-en="Prototype only: switch the sample situation">เฉพาะ prototype: สลับสถานการณ์ตัวอย่าง</div>
+    <div class="seg" role="group" aria-label="Simulate level">
+      <button type="button" class="active" aria-pressed="true" data-show="lv-danger" data-en="At risk">เสี่ยงสูง</button>
+      <button type="button" aria-pressed="false" data-show="lv-warn" data-en="Warning">เฝ้าระวัง</button>
+      <button type="button" aria-pressed="false" data-show="lv-ok" data-en="Normal">ปกติ</button>
+    </div>
+    <label class="choice mt-4"><input type="checkbox" data-toggle="outdated"><span data-en="Latest sync failed (show the data outdated badge)">ซิงก์ล่าสุดล้มเหลว (แสดงป้ายข้อมูลไม่ทันสมัย)</span></label>
+  </div>
+
+  <div class="alert info" id="outdated" hidden><div class="a-body"><div class="a-title" data-en="Data outdated">ข้อมูลไม่ทันสมัย</div><div data-en="The latest sync failed. Figures below use the last successful data (15 Oct 2026 06:00). This badge disappears after the next successful sync. (FR-19)">การซิงก์ล่าสุดล้มเหลว ตัวเลขด้านล่างใช้ข้อมูลที่ซิงก์สำเร็จล่าสุด (15 ต.ค. 2026 06:00) ป้ายนี้หายเมื่อซิงก์สำเร็จครั้งถัดไป (FR-19)</div></div></div>
+
+  <!-- ระดับ: เสี่ยงสูง -->
+  <section id="lv-danger" data-g="lv">
+    <div class="alert danger"><div class="a-body"><div class="a-title" data-en="You are at high risk: 2 conditions met">คุณอยู่ในระดับเสี่ยงสูง: เข้าเงื่อนไข 2 ข้อ</div>
+      <div data-en="Attendance below 75% and grade declining 3 terms in a row.">การเข้าเรียนต่ำกว่า 75% และเกรดลดลงต่อเนื่อง 3 ภาค</div>
+      <a href="s03-alert-detail.html" data-en="See reasons and the notification">ดูเหตุผลและการแจ้งเตือน</a></div></div>
+    <div class="card">
+      <div class="card-h"><h2 data-en="Situation by variable (FR-06)">สถานการณ์แยกตามตัวแปร (FR-06)</h2><span class="badge danger" data-en="At risk">เสี่ยงสูง</span></div>
+      <div class="card-b flush tbl-wrap"><table class="tbl">
+        <thead><tr><th data-en="Variable">ตัวแปร</th><th data-en="Your value">ค่าของคุณ</th><th data-en="Threshold (sample)">เกณฑ์ (ตัวอย่าง)</th><th data-en="Status">สถานะ</th></tr></thead>
+        <tbody>
+          <tr><td data-en="Grade / GPA">เกรด/ผลการเรียน</td><td class="c">2.10</td><td class="c">&lt; 2.25</td><td class="c"><span class="badge danger" data-en="Condition met">เข้าเงื่อนไข</span></td></tr>
+          <tr><td data-en="Attendance">การเข้าเรียน</td><td class="c">68%</td><td class="c">&lt; 75%</td><td class="c"><span class="badge danger" data-en="Condition met">เข้าเงื่อนไข</span></td></tr>
+          <tr><td data-en="Assignment submission">การส่งงาน</td><td class="c">8 / 10 (80%)</td><td class="c">&lt; 70%</td><td class="c"><span class="badge ok" data-en="Normal">ปกติ</span></td></tr>
+          <tr><td data-en="Grade trend (FR-02)">แนวโน้มผลการเรียน (FR-02)</td><td class="c">3.10 &rarr; 2.70 &rarr; 2.10</td><td class="c" data-en="Declines 2 terms in a row">ลดลงต่อเนื่อง 2 ภาค</td><td class="c"><span class="badge danger" data-en="Condition met">เข้าเงื่อนไข</span></td></tr>
+        </tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ระดับ: เฝ้าระวัง -->
+  <section id="lv-warn" data-g="lv" hidden>
+    <div class="alert warn"><div class="a-body"><div class="a-title" data-en="Watch out: 1 condition met">เฝ้าระวัง: เข้าเงื่อนไข 1 ข้อ</div>
+      <div data-en="Attendance is below 75%.">การเข้าเรียนต่ำกว่า 75%</div>
+      <a href="s03-alert-detail.html" data-en="See reasons and the notification">ดูเหตุผลและการแจ้งเตือน</a></div></div>
+    <div class="card">
+      <div class="card-h"><h2 data-en="Situation by variable (FR-06)">สถานการณ์แยกตามตัวแปร (FR-06)</h2><span class="badge warn" data-en="Warning">เฝ้าระวัง</span></div>
+      <div class="card-b flush tbl-wrap"><table class="tbl">
+        <thead><tr><th data-en="Variable">ตัวแปร</th><th data-en="Your value">ค่าของคุณ</th><th data-en="Threshold (sample)">เกณฑ์ (ตัวอย่าง)</th><th data-en="Status">สถานะ</th></tr></thead>
+        <tbody>
+          <tr><td data-en="Grade / GPA">เกรด/ผลการเรียน</td><td class="c">2.80</td><td class="c">&lt; 2.25</td><td class="c"><span class="badge ok" data-en="Normal">ปกติ</span></td></tr>
+          <tr><td data-en="Attendance">การเข้าเรียน</td><td class="c">72%</td><td class="c">&lt; 75%</td><td class="c"><span class="badge warn" data-en="Condition met">เข้าเงื่อนไข</span></td></tr>
+          <tr><td data-en="Assignment submission">การส่งงาน</td><td class="c">9 / 10 (90%)</td><td class="c">&lt; 70%</td><td class="c"><span class="badge ok" data-en="Normal">ปกติ</span></td></tr>
+          <tr><td data-en="Grade trend (FR-02)">แนวโน้มผลการเรียน (FR-02)</td><td class="c">2.90 &rarr; 2.85 &rarr; 2.80</td><td class="c" data-en="Declines 2 terms in a row">ลดลงต่อเนื่อง 2 ภาค</td><td class="c"><span class="badge ok" data-en="Normal (slight decline)">ปกติ (ลดลงเล็กน้อย)</span></td></tr>
+        </tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ระดับ: ปกติ -->
+  <section id="lv-ok" data-g="lv" hidden>
+    <div class="alert ok"><div class="a-body"><div class="a-title" data-en="All good: no risk condition met">ปกติดี: ไม่เข้าเงื่อนไขเสี่ยง</div><div data-en="Keep it up. No alert is sent.">รักษาระดับนี้ไว้ ระบบไม่ส่งแจ้งเตือน</div></div></div>
+    <div class="card">
+      <div class="card-h"><h2 data-en="Situation by variable (FR-06)">สถานการณ์แยกตามตัวแปร (FR-06)</h2><span class="badge ok" data-en="Normal">ปกติ</span></div>
+      <div class="card-b flush tbl-wrap"><table class="tbl">
+        <thead><tr><th data-en="Variable">ตัวแปร</th><th data-en="Your value">ค่าของคุณ</th><th data-en="Threshold (sample)">เกณฑ์ (ตัวอย่าง)</th><th data-en="Status">สถานะ</th></tr></thead>
+        <tbody>
+          <tr><td data-en="Grade / GPA">เกรด/ผลการเรียน</td><td class="c">3.20</td><td class="c">&lt; 2.25</td><td class="c"><span class="badge ok" data-en="Normal">ปกติ</span></td></tr>
+          <tr><td data-en="Attendance">การเข้าเรียน</td><td class="c">92%</td><td class="c">&lt; 75%</td><td class="c"><span class="badge ok" data-en="Normal">ปกติ</span></td></tr>
+          <tr><td data-en="Assignment submission">การส่งงาน</td><td class="c">10 / 10 (100%)</td><td class="c">&lt; 70%</td><td class="c"><span class="badge ok" data-en="Normal">ปกติ</span></td></tr>
+          <tr><td data-en="Grade trend (FR-02)">แนวโน้มผลการเรียน (FR-02)</td><td class="c">3.00 &rarr; 3.10 &rarr; 3.20</td><td class="c" data-en="Declines 2 terms in a row">ลดลงต่อเนื่อง 2 ภาค</td><td class="c"><span class="badge ok" data-en="Normal (improving)">ปกติ (ดีขึ้น)</span></td></tr>
+        </tbody></table></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-h"><h2 data-en="Personal study advice (FR-05)">คำแนะนำการเรียนเฉพาะบุคคล (FR-05)</h2><span class="caption" data-en="Built from your own past data; new learners get basic rules">สร้างจากข้อมูลย้อนหลังของคุณเอง ผู้เรียนใหม่ใช้กฎพื้นฐาน</span></div>
+    <div class="card-b">
+      <ul class="list-plain">
+        <li><b data-en="Attend more of MATH101">เข้าเรียน MATH101 ให้มากขึ้น</b><div class="muted" data-en="Why: you missed 6 of the last 12 MATH101 sessions, and the grade in this subject fell the most.">เหตุผล: คุณขาด MATH101 6 จาก 12 ครั้งล่าสุด และเกรดวิชานี้ลดลงมากที่สุด</div></li>
+        <li><b data-en="Plan weekly review time">วางเวลาทบทวนรายสัปดาห์</b><div class="muted" data-en="Why: your grade dropped for 3 terms while submissions stayed on time, so the gap is likely understanding, not workload.">เหตุผล: เกรดลดลง 3 ภาคทั้งที่ส่งงานตรงเวลา จึงน่าจะเป็นเรื่องความเข้าใจ ไม่ใช่ภาระงาน</div></li>
+        <li><b data-en="Read advice from peers">อ่านคำแนะนำจากเพื่อนในห้องรวม</b><div class="muted"><a href="c01-chat-room.html" data-en="Open the shared room">เปิดห้องรวม</a></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <p class="caption"><span data-en="Privacy (NFR-01): you only see your own data.">ความเป็นส่วนตัว (NFR-01): คุณเห็นเฉพาะข้อมูลของตนเอง</span> <a href="s04-history.html" data-en="Open history">เปิดประวัติ</a></p>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
