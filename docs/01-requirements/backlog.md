@@ -22,7 +22,7 @@
 | FR-15 | ปฏิเสธพร้อมเหตุผลและแจ้งผู้ส่ง | [[20261014-02-peer-advice-chat#4. Functional Requirements]] | Backlog |
 | FR-16 | ตรวจสิทธิ์ผู้ส่งตามเกณฑ์ผู้ผ่านเกณฑ์ | [[20261014-02-peer-advice-chat#4. Functional Requirements]] | Backlog |
 | FR-20 | ส่งข้อความเข้าห้องรวม ทุกคนเห็นเมื่ออนุมัติ | [[20261016-02-peer-chat-recipients-lock-resubmit#4. Functional Requirements]] | Backlog |
-| FR-24 | ปฏิเสธคำตัดสินหลังล็อกถูกปลดอัตโนมัติ แจ้งผู้ตรวจ ข้อความกลับเข้าคิว (ระดับรอผู้ใช้ยืนยัน) | [[20261016-03-first-sync-failure-and-expired-lock-decision#4. Functional Requirements]] | Backlog |
+| FR-24 | ปฏิเสธคำตัดสินเมื่อผู้ตัดสินไม่ได้ถือล็อกที่ยังใช้ได้ (ล็อกหมดอายุ/ปลดด้วยมือ/ผู้อื่นล็อกต่อ) แจ้งผู้ตรวจ ข้อความกลับเข้าคิว (ระดับรอผู้ใช้ยืนยัน; ขยายขอบเขต 2026-10-16) | [[20261016-03-first-sync-failure-and-expired-lock-decision#4. Functional Requirements]] | Backlog |
 | NFR-04 | ความปลอดภัยของเนื้อหา (ผู้รับไม่เห็นข้อความที่ยังไม่อนุมัติ/ถูกปฏิเสธ) | [[20261014-02-peer-advice-chat#5. Non-functional Requirements]] | Backlog |
 | NFR-05 | ความรับผิดชอบ/audit trail ของการตรวจข้อความ | [[20261014-02-peer-advice-chat#5. Non-functional Requirements]] | Backlog |
 
