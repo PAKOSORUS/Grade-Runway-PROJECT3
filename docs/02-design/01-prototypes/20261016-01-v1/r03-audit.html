@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grade Runway — ประวัติการตรวจ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="r03-audit">
+<main class="main" id="content">
+  <h1 data-en="Review audit trail">ประวัติการตรวจข้อความ (audit trail)</h1>
+
+  <section class="card">
+    <div class="card-b">
+      <div class="filters">
+        <div class="field"><label for="f-type" data-en="Event type">ประเภทเหตุการณ์</label>
+          <select id="f-type">
+            <option value="all" data-en="All">ทั้งหมด</option>
+            <option value="decision" data-en="Decisions (approve / reject)">คำตัดสิน (อนุมัติ/ปฏิเสธ)</option>
+            <option value="unlock" data-en="Unlocks">การปลดล็อก</option>
+            <option value="refused" data-en="Refused decisions">คำตัดสินที่ถูกปฏิเสธ</option>
+            <option value="resubmit" data-en="Resubmissions">การส่งใหม่</option>
+          </select></div>
+        <div class="field"><label for="f-d" data-en="Date range">ช่วงวันที่</label><input id="f-d" type="text" value="01 Oct 2026 - 16 Oct 2026"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-h"><h2 data-en="Events (NFR-05)">เหตุการณ์ (NFR-05)</h2><span class="caption"><span data-en="Showing">แสดง</span> <b id="audit-count">6</b> <span class="ph" data-en="sample data">ข้อมูลตัวอย่าง</span></span></div>
+    <div class="card-b flush tbl-wrap"><table class="tbl">
+      <thead><tr><th class="sort" data-en="Time">เวลา</th><th data-en="Message">ข้อความ</th><th data-en="By">โดย</th><th data-en="Event">เหตุการณ์</th><th data-en="Negative?">เชิงลบ?</th><th data-en="Reason / relation">เหตุผล / ความสัมพันธ์</th></tr></thead>
+      <tbody id="audit-body">
+        <tr data-type="decision"><td class="c">16 Oct 2026 10:02</td><td class="c">M-0004</td><td data-en="Aj. Somchai">อ.สมชาย</td><td><span class="badge ok" data-en="Approved">อนุมัติ</span></td><td class="c" data-en="Not negative">ไม่เชิงลบ</td><td>-</td></tr>
+        <tr data-type="decision"><td class="c">14 Oct 2026 15:21</td><td class="c">M-0003</td><td data-en="Admin C">Admin ซี</td><td><span class="badge danger" data-en="Rejected">ปฏิเสธ</span></td><td class="c" data-en="Negative">เชิงลบ</td><td data-en="Contains a negative remark about a classmate">มีถ้อยคำเชิงลบต่อเพื่อนนักศึกษา</td></tr>
+        <tr data-type="resubmit"><td class="c">16 Oct 2026 09:30</td><td class="c">M-0009</td><td data-en="Student 6X-00011">นักศึกษา 6X-00011</td><td><span class="badge info" data-en="New message">ข้อความใหม่</span></td><td class="c">-</td><td data-en="Replaces M-0003 (closed permanently) (FR-22)">แทน M-0003 (ปิดถาวร) (FR-22)</td></tr>
+        <tr data-type="unlock"><td class="c">16 Oct 2026 10:15</td><td class="c">M-0005</td><td data-en="System (auto)">ระบบ (อัตโนมัติ)</td><td><span class="badge info" data-en="Auto-unlocked">ปลดล็อกอัตโนมัติ</span></td><td class="c">-</td><td data-en="Lock expired after T_unlock (sample 30 min). Not a decision (FR-21)">ล็อกหมดอายุหลัง T_unlock (ตัวอย่าง 30 นาที) ไม่ใช่การตัดสิน (FR-21)</td></tr>
+        <tr data-type="unlock"><td class="c">16 Oct 2026 09:48</td><td class="c">M-0002</td><td data-en="Aj. Somchai">อ.สมชาย</td><td><span class="badge info" data-en="Manually unlocked">ปลดล็อกด้วยมือ</span></td><td class="c">-</td><td data-en="Locked by Admin C and left stuck (FR-21)">ล็อกโดย Admin ซี ค้างไม่ตัดสิน (FR-21)</td></tr>
+        <tr data-type="refused"><td class="c">16 Oct 2026 10:20</td><td class="c">M-0005</td><td data-en="Aj. B">อ.บี</td><td><span class="badge warn" data-en="Decision refused">คำตัดสินถูกปฏิเสธ</span></td><td class="c">-</td><td data-en="Pressed Approve after the lock expired. Not recorded as a decision; message stays in queue (FR-24)">กดอนุมัติหลังล็อกหมดอายุ ไม่บันทึกเป็นคำตัดสิน ข้อความยังอยู่ในคิว (FR-24)</td></tr>
+      </tbody></table></div>
+  </section>
+
+  <p class="caption" data-en="Only teachers and admins can open this page (NFR-05). Each event records who, what, negative or not, and why.">เฉพาะอาจารย์และ Admin เปิดหน้านี้ได้ (NFR-05) แต่ละเหตุการณ์บันทึกว่าใคร ทำอะไร เชิงลบหรือไม่ และเพราะอะไร</p>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

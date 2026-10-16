@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grade Runway — ตั้งค่า threshold</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="a02-thresholds">
+<main class="main" id="content">
+  <h1 data-en="Risk thresholds">ตั้งค่า threshold ความเสี่ยง</h1>
+
+  <div class="alert info"><div class="a-body"><span class="ph" data-en="sample values">ค่าตัวอย่าง</span> <span data-en="The spec has not defined real threshold values yet. The numbers below are examples only.">spec ยังไม่กำหนดค่า threshold จริง ตัวเลขด้านล่างเป็นตัวอย่างเท่านั้น</span></div></div>
+
+  <div class="alert ok" id="saved-note" hidden><div class="a-body"><div class="a-title" data-en="Saved">บันทึกแล้ว</div><div data-en="The next evaluation round uses the new values (FR-03). Alerts already sent are not changed.">การประเมินรอบถัดไปใช้ค่าใหม่ (FR-03) การแจ้งเตือนที่ส่งไปแล้วไม่เปลี่ยน</div></div></div>
+
+  <section class="card">
+    <div class="card-h"><h2 data-en="Rule per variable (FR-08)">กฎของแต่ละตัวแปร (FR-08)</h2></div>
+    <div class="card-b">
+      <div class="grid-2">
+        <div class="field"><label for="t-gpa" data-en="Grade / GPA is below">เกรด/ผลการเรียน ต่ำกว่า</label><input id="t-gpa" type="number" step="0.01" value="2.25" data-min="0" data-max="4"><span class="hint" data-en="Allowed range 0.00 - 4.00">ช่วงที่ใช้ได้ 0.00 - 4.00</span><span class="err-msg" data-en="Enter a number between 0.00 and 4.00">กรอกตัวเลขระหว่าง 0.00 ถึง 4.00</span></div>
+        <div class="field"><label for="t-att" data-en="Attendance is below (%)">การเข้าเรียน ต่ำกว่า (%)</label><input id="t-att" type="number" value="75" data-min="0" data-max="100"><span class="hint" data-en="Allowed range 0 - 100">ช่วงที่ใช้ได้ 0 - 100</span><span class="err-msg" data-en="Enter a number between 0 and 100">กรอกตัวเลขระหว่าง 0 ถึง 100</span></div>
+        <div class="field"><label for="t-sub" data-en="Assignment submission is below (%)">การส่งงาน ต่ำกว่า (%)</label><input id="t-sub" type="number" value="70" data-min="0" data-max="100"><span class="hint" data-en="Allowed range 0 - 100">ช่วงที่ใช้ได้ 0 - 100</span><span class="err-msg" data-en="Enter a number between 0 and 100">กรอกตัวเลขระหว่าง 0 ถึง 100</span></div>
+        <div class="field"><label for="t-trd" data-en="Grade declines for N consecutive terms">เกรดลดลงต่อเนื่อง N ภาค</label><input id="t-trd" type="number" value="2" data-min="1" data-max="10"><span class="hint" data-en="Allowed range 1 - 10">ช่วงที่ใช้ได้ 1 - 10</span><span class="err-msg" data-en="Enter a whole number between 1 and 10">กรอกจำนวนเต็มระหว่าง 1 ถึง 10</span></div>
+      </div>
+      <p class="mt-4"><span class="ph" data-en="sample">ตัวอย่าง</span> <span data-en="How conditions map to levels (this prototype assumes: 1 condition = Warning, 2 or more = At risk). The spec does not define this yet.">การแปลงจำนวนเงื่อนไขเป็นระดับ (prototype สมมติ: 1 เงื่อนไข = เฝ้าระวัง, ตั้งแต่ 2 = เสี่ยงสูง) spec ยังไม่กำหนด</span></p>
+      <div class="row end mt-4">
+        <button type="button" class="btn" data-toast="คืนค่าเริ่มต้นตัวอย่างแล้ว (จำลอง)" data-toast-en="Reset to sample defaults (simulated)" data-en="Reset">คืนค่าเริ่มต้น</button>
+        <button type="button" class="btn btn-primary" id="btn-save" data-en="Save">บันทึก</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-h"><h2 data-en="Who sees what (NFR-01)">ใครเห็นอะไร (NFR-01)</h2></div>
+    <div class="card-b"><p class="muted" data-en="Only administrators can open this page. Students and advisors do not see this menu item.">เฉพาะผู้ดูแลระบบเข้าหน้านี้ได้ ผู้เรียนและครูไม่เห็นเมนูนี้</p></div>
+  </section>
+
+  <div class="row between"><a class="btn" href="a01-integration.html" data-en="Back: Integration">กลับ: การเชื่อมต่อ</a><a class="btn" href="s01-dashboard.html" data-en="See student result">ดูผลฝั่งผู้เรียน</a></div>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

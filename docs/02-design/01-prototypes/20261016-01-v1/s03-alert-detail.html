@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grade Runway — รายละเอียดแจ้งเตือน</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="s03-alert-detail">
+<main class="main" id="content">
+  <h1 data-en="Risk alert">แจ้งเตือนความเสี่ยง</h1>
+
+  <div class="alert danger"><div class="a-body"><div class="a-title" data-en="High risk alert · 16 Oct 2026 06:05">แจ้งเตือนเสี่ยงสูง · 16 ต.ค. 2026 06:05</div>
+    <div data-en="Your data met 2 risk conditions in this evaluation round.">ข้อมูลของคุณเข้าเงื่อนไขเสี่ยง 2 ข้อในการประเมินรอบนี้</div></div></div>
+
+  <section class="card">
+    <div class="card-h"><h2 data-en="Why you received this alert (NFR-02)">ทำไมคุณจึงได้รับแจ้งเตือนนี้ (NFR-02)</h2></div>
+    <div class="card-b flush tbl-wrap"><table class="tbl">
+      <thead><tr><th data-en="Condition that was met">เงื่อนไขที่เข้า</th><th data-en="Your value">ค่าของคุณ</th><th data-en="Threshold (sample)">เกณฑ์ (ตัวอย่าง)</th></tr></thead>
+      <tbody>
+        <tr><td data-en="Attendance is below the threshold">การเข้าเรียนต่ำกว่าเกณฑ์</td><td class="c">68%</td><td class="c">&lt; 75%</td></tr>
+        <tr><td data-en="Grade declined for N consecutive terms">เกรดลดลงต่อเนื่อง N ภาค</td><td class="c" data-en="3 terms (3.10 → 2.70 → 2.10)">3 ภาค (3.10 → 2.70 → 2.10)</td><td class="c" data-en="N ≥ 2">N ≥ 2</td></tr>
+      </tbody></table></div>
+    <div class="card-b"><span class="ph" data-en="sample">ตัวอย่าง</span> <span class="caption" data-en="Threshold values are samples; the real values are set by the admin (FR-08).">ค่าเกณฑ์เป็นตัวอย่าง ค่าจริงตั้งโดยผู้ดูแลระบบ (FR-08)</span></div>
+  </section>
+
+  <div class="grid-2">
+    <section class="card">
+      <div class="card-h"><h2 data-en="In-app notification (FR-04)">แจ้งเตือนใน-app (FR-04)</h2><span class="badge danger" data-en="At risk">เสี่ยงสูง</span></div>
+      <div class="card-b">
+        <p data-en="Sent: 16 Oct 2026 06:05 · Status: unread">ส่งเมื่อ 16 ต.ค. 2026 06:05 · สถานะ: ยังไม่อ่าน</p>
+        <button type="button" class="btn btn-primary" data-toast="ทำเครื่องหมายว่าอ่านแล้ว" data-toast-en="Marked as read" data-en="Mark as read">ทำเครื่องหมายว่าอ่านแล้ว</button>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-h"><h2 data-en="Email copy (FR-04)">สำเนาอีเมล (FR-04)</h2><span class="caption" data-en="Preview">ตัวอย่างอีเมล</span></div>
+      <div class="card-b">
+        <dl class="kv">
+          <dt data-en="To">ถึง</dt><dd>somjai@example.edu</dd>
+          <dt data-en="Subject">หัวข้อ</dt><dd data-en="[Grade Runway] You are at high risk">[Grade Runway] คุณอยู่ในระดับเสี่ยงสูง</dd>
+        </dl>
+        <p class="mt-4" data-en="Reasons: attendance 68% (below 75%); grade declined 3 terms in a row. Open the system to see advice.">เหตุผล: เข้าเรียน 68% (ต่ำกว่า 75%) เกรดลดลงต่อเนื่อง 3 ภาค เปิดระบบเพื่อดูคำแนะนำ</p>
+      </div>
+    </section>
+  </div>
+
+  <div class="row between"><a class="btn" href="s01-dashboard.html" data-en="Back to dashboard">กลับแดชบอร์ด</a><a class="btn" href="s04-history.html" data-en="Open history">เปิดประวัติ</a></div>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

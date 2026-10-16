@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grade Runway — คิวรออนุมัติ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="r01-queue">
+<main class="main" id="content">
+  <h1 data-en="Approval queue">คิวข้อความรออนุมัติ</h1>
+  <p class="muted" data-en="Teachers and admins have equal rights to review (FR-13). A locked message cannot be decided by someone else (FR-18).">อาจารย์และ Admin มีสิทธิ์ตรวจเท่ากัน (FR-13) ข้อความที่ถูกล็อกจะถูกตัดสินโดยคนอื่นไม่ได้ (FR-18)</p>
+
+  <section class="card">
+    <div class="card-h"><h2 data-en="Messages waiting for review">ข้อความรอตรวจ</h2><span class="ph" data-en="sample data">ข้อมูลตัวอย่าง</span></div>
+    <div class="card-b flush tbl-wrap"><table class="tbl">
+      <thead><tr><th>ID</th><th class="sort" data-en="Sent">ส่งเมื่อ</th><th data-en="Message">ข้อความ</th><th data-en="Status">สถานะ</th><th data-en="Action">การดำเนินการ</th></tr></thead>
+      <tbody>
+        <tr><td class="c">M-0007</td><td class="c">16 Oct 2026 08:40</td><td data-en="Do the weekly problem set before the lecture...">ทำโจทย์ประจำสัปดาห์ก่อนเข้าเลคเชอร์...</td>
+          <td class="c st"><span class="badge info" data-en="Waiting">รอตรวจ</span></td>
+          <td class="c ac"><a class="btn btn-sm btn-primary" href="r02-review.html" data-en="Review">เปิดตรวจ</a></td></tr>
+        <tr><td class="c">M-0009</td><td class="c">16 Oct 2026 09:30</td><td data-en="Start the weekly review on Sunday evening... (new message replacing M-0003)">เริ่มทบทวนประจำสัปดาห์ทุกเย็นวันอาทิตย์... (ข้อความใหม่แทน M-0003)</td>
+          <td class="c st"><span class="badge info" data-en="Waiting">รอตรวจ</span></td>
+          <td class="c ac"><a class="btn btn-sm btn-primary" href="r02-review.html" data-en="Review">เปิดตรวจ</a></td></tr>
+        <tr><td class="c">M-0008</td><td class="c">16 Oct 2026 08:55</td><td data-en="Ask the teacher early when you are lost...">ถามอาจารย์ตั้งแต่เนิ่นๆ เมื่อไม่เข้าใจ...</td>
+          <td class="c st"><span class="badge warn" data-en="Locked by Aj. B">ล็อกโดย อ.บี</span><div class="caption" data-en="Auto-unlock in 12:40 (T_unlock sample = 30 min)">ปลดอัตโนมัติใน 12:40 (T_unlock ตัวอย่าง = 30 นาที)</div></td>
+          <td class="c ac"><button type="button" class="btn btn-sm" disabled data-en="Locked">ถูกล็อก</button></td></tr>
+        <tr><td class="c">M-0006</td><td class="c">16 Oct 2026 08:10</td><td data-en="Form a small study group...">ตั้งกลุ่มติวเล็กๆ...</td>
+          <td class="c st"><span class="badge warn" data-en="Locked by Admin C (stuck)">ล็อกโดย Admin ซี (ค้าง)</span><div class="caption" data-en="Locked for 25 min, no decision yet">ล็อกมา 25 นาที ยังไม่ตัดสิน</div></td>
+          <td class="c ac"><button type="button" class="btn btn-sm" data-unlock data-en="Unlock manually">ปลดล็อกด้วยมือ</button></td></tr>
+        <tr><td class="c">M-0005</td><td class="c">16 Oct 2026 07:50</td><td data-en="Use the library quiet room before exams...">ใช้ห้องอ่านหนังสือเงียบก่อนสอบ...</td>
+          <td class="c st"><span class="badge info" data-en="Waiting">รอตรวจ</span><div class="caption" data-en="Auto-unlocked at 10:15 (lock expired). Not counted as a decision.">ปลดล็อกอัตโนมัติ 10:15 (ล็อกหมดอายุ) ไม่ถือเป็นการตัดสิน</div></td>
+          <td class="c ac"><a class="btn btn-sm btn-primary" href="r02-review.html" data-en="Review">เปิดตรวจ</a></td></tr>
+      </tbody></table></div>
+    <div class="pager"><span data-en="Rows per page: 10">จำนวนต่อหน้า: 10</span><span class="pages">1-5 of 5 &laquo; &lsaquo; <span class="pg">1</span> &rsaquo; &raquo;</span></div>
+  </section>
+
+  <p class="caption"><span class="ph" data-en="sample">ตัวอย่าง</span> <span data-en="The auto-unlock time (T_unlock) and the review deadline (SLA) are not defined in the spec yet.">ค่าเวลาปลดล็อกอัตโนมัติ (T_unlock) และกำหนดเวลาตรวจ (SLA) spec ยังไม่กำหนด</span> <a href="r03-audit.html" data-en="Open audit trail">เปิดประวัติการตรวจ</a></p>
+
+  <div class="modal-back" id="m-unlock" hidden role="dialog" aria-modal="true" aria-labelledby="m-unlock-t">
+    <div class="modal">
+      <h2 id="m-unlock-t" data-en="Unlock this message?">ปลดล็อกข้อความนี้หรือไม่</h2>
+      <p data-en="The message returns to the approval queue. It is not counted as a decision and receivers still cannot see it (FR-21, NFR-04). Another reviewer can then lock and review it.">ข้อความจะกลับเข้าคิวรออนุมัติ ไม่ถือเป็นการตัดสิน และผู้อ่านยังไม่เห็นข้อความ (FR-21, NFR-04) ผู้ตรวจคนอื่นจะล็อกและตรวจต่อได้</p>
+      <div class="row end"><button type="button" class="btn" data-close data-en="Cancel">ยกเลิก</button><button type="button" class="btn btn-primary" id="btn-unlock-confirm" data-en="Unlock">ปลดล็อก</button></div>
+    </div>
+  </div>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

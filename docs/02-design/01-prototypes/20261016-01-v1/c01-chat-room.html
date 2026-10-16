@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grade Runway — ห้องรวมแชทแนะนำ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="c01-chat-room">
+<main class="main" id="content">
+  <div class="row between">
+    <h1 data-en="Shared advice room">ห้องรวมแนะนำแนวทางการเรียน</h1>
+    <a class="btn btn-primary" href="c02-compose.html" data-en="Write advice">เขียนข้อความแนะนำ</a>
+  </div>
+
+  <div class="alert info"><div class="a-body"><div class="a-title" data-en="One room for every student (FR-20)">ห้องรวมเดียวสำหรับนักศึกษาทุกคน (FR-20)</div>
+    <div data-en="You only see messages that a teacher or admin has approved. Pending or rejected messages never appear here (FR-11, NFR-04).">คุณเห็นเฉพาะข้อความที่อาจารย์หรือ Admin อนุมัติแล้ว ข้อความที่รออนุมัติหรือถูกปฏิเสธจะไม่ปรากฏที่นี่ (FR-11, NFR-04)</div></div></div>
+
+  <div class="demo-bar">
+    <div class="caption"><span class="ph" data-en="open question">ประเด็นเปิด</span> <span data-en="Prototype only: sender display policy is not decided (NFR-06). Switch to compare.">เฉพาะ prototype: นโยบายแสดงชื่อผู้ส่งยังไม่กำหนด (NFR-06) สลับเพื่อเปรียบเทียบ</span></div>
+    <div class="seg" role="group" aria-label="Sender policy">
+      <button type="button" class="active" aria-pressed="true" data-policy="named" data-en="Show sender name">แสดงชื่อผู้ส่ง</button>
+      <button type="button" aria-pressed="false" data-policy="anon" data-en="Anonymous">ไม่ระบุตัวตน</button>
+    </div>
+  </div>
+
+  <section class="card room" id="room">
+    <div class="card-h"><h2 data-en="Approved messages">ข้อความที่อนุมัติแล้ว</h2><span class="ph" data-en="sample data">ข้อมูลตัวอย่าง</span></div>
+    <div class="card-b flush">
+      <article class="msg">
+        <span class="avatar" aria-hidden="true"><span class="s-named">PN</span><span class="s-anon">?</span></span>
+        <div class="body">
+          <div class="meta"><span class="sender"><span class="s-named" data-en="Pran Example">ปราณ ตัวอย่าง</span><span class="s-anon" data-en="Anonymous student">นักศึกษาไม่ระบุตัวตน</span></span><span class="caption">16 Oct 2026 09:12</span><span class="badge ok" data-en="Approved">อนุมัติแล้ว</span></div>
+          <p data-en="Do the weekly problem set before the lecture, not after. It made the lecture much easier to follow for me.">ทำโจทย์ประจำสัปดาห์ก่อนเข้าเลคเชอร์ ไม่ใช่หลังเรียน ทำให้ฟังเลคเชอร์เข้าใจง่ายขึ้นมาก</p>
+        </div>
+      </article>
+      <article class="msg">
+        <span class="avatar" aria-hidden="true"><span class="s-named">KT</span><span class="s-anon">?</span></span>
+        <div class="body">
+          <div class="meta"><span class="sender"><span class="s-named" data-en="Kritta Example">กฤตตา ตัวอย่าง</span><span class="s-anon" data-en="Anonymous student">นักศึกษาไม่ระบุตัวตน</span></span><span class="caption">15 Oct 2026 17:40</span><span class="badge ok" data-en="Approved">อนุมัติแล้ว</span></div>
+          <p data-en="Form a small study group of 3 people and meet once a week. Explaining to others is the best way to check yourself.">ตั้งกลุ่มติว 3 คน นัดกันสัปดาห์ละครั้ง การอธิบายให้เพื่อนฟังช่วยเช็กความเข้าใจตัวเองได้ดีที่สุด</p>
+        </div>
+      </article>
+      <article class="msg">
+        <span class="avatar" aria-hidden="true"><span class="s-named">NW</span><span class="s-anon">?</span></span>
+        <div class="body">
+          <div class="meta"><span class="sender"><span class="s-named" data-en="Nawin Example">นวิน ตัวอย่าง</span><span class="s-anon" data-en="Anonymous student">นักศึกษาไม่ระบุตัวตน</span></span><span class="caption">14 Oct 2026 12:05</span><span class="badge ok" data-en="Approved">อนุมัติแล้ว</span></div>
+          <p data-en="Ask the teacher early when you are lost in a topic. Waiting until exams made it much harder for me.">ถามอาจารย์ตั้งแต่เนิ่นๆ เมื่อไม่เข้าใจหัวข้อไหน การรอจนใกล้สอบทำให้ยากขึ้นมาก</p>
+        </div>
+      </article>
+    </div>
+    <div class="pager"><span data-en="Real-time chat and attachments are out of scope.">การแชทโต้ตอบแบบ real-time และไฟล์แนบอยู่นอกขอบเขต</span><span class="pages">1-3 of 3 &laquo; &lsaquo; <span class="pg">1</span> &rsaquo; &raquo;</span></div>
+  </section>
+
+  <p><a href="c03-my-messages.html" data-en="See my messages and their status">ดูข้อความของฉันและสถานะ</a></p>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

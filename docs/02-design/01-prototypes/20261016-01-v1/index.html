@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grade Runway — Prototype v1</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="index">
+<header class="app-header">
+  <span class="brand">Grade Runway <small data-en="(temporary name)">(ชื่อชั่วคราว)</small></span>
+  <div class="lang" role="group" aria-label="Language"><button type="button" data-lang="en" lang="en" aria-pressed="false">EN</button><span class="sep">|</span><button type="button" data-lang="th" lang="th" aria-pressed="true">TH</button></div>
+</header>
+<main class="main" id="content" style="margin:0 auto">
+  <h1 data-en="Prototype v1 — all screens">Prototype v1 — หน้าจอทั้งหมด</h1>
+  <p class="muted" data-en="Clickable HTML prototype. All data is sample data. 14 screens, 7 journeys, 30 requirement codes. Based on DESIGN.md (confirmed 2026-10-16).">Clickable HTML prototype ข้อมูลทุกอย่างเป็นตัวอย่าง 14 หน้าจอ 7 journey 30 รหัส ยึด DESIGN.md (ยืนยันแล้ว 2026-10-16)</p>
+
+  <section class="card"><div class="card-h"><h2 data-en="J1 Administrator sets up connection and thresholds">J1 ผู้ดูแลระบบตั้งค่าการเชื่อมต่อและ threshold</h2><span class="role-badge" data-en="Admin">ผู้ดูแลระบบ</span></div>
+    <div class="card-b idx-grid">
+      <a class="idx-item" href="a01-integration.html"><div class="t">a01 <span data-en="Integration &amp; Sync">การเชื่อมต่อและซิงก์</span></div><div class="caption">FR-01 FR-19 FR-23 NFR-03</div></a>
+      <a class="idx-item" href="a02-thresholds.html"><div class="t">a02 <span data-en="Risk thresholds">ตั้งค่า threshold</span></div><div class="caption">FR-08 FR-03</div></a>
+    </div></section>
+
+  <section class="card"><div class="card-h"><h2 data-en="J2 Learner receives alerts and advice">J2 ผู้เรียนรับแจ้งเตือนและคำแนะนำ</h2><span class="role-badge" data-en="Student">ผู้เรียน</span></div>
+    <div class="card-b idx-grid">
+      <a class="idx-item" href="s01-dashboard.html"><div class="t">s01 <span data-en="Student dashboard">แดชบอร์ดผู้เรียน</span></div><div class="caption">FR-02 FR-03 FR-05 FR-06 FR-19 NFR-01</div></a>
+      <a class="idx-item" href="s02-waiting-data.html"><div class="t">s02 <span data-en="Waiting for data">รอข้อมูลซิงก์</span></div><div class="caption">FR-23</div></a>
+      <a class="idx-item" href="s03-alert-detail.html"><div class="t">s03 <span data-en="Alert detail">รายละเอียดแจ้งเตือน</span></div><div class="caption">FR-04 NFR-02</div></a>
+      <a class="idx-item" href="s04-history.html"><div class="t">s04 <span data-en="History">ประวัติแจ้งเตือน/คำแนะนำ</span></div><div class="caption">FR-09 NFR-01</div></a>
+    </div></section>
+
+  <section class="card"><div class="card-h"><h2 data-en="J3 Advisor follows advisees">J3 ครู/อาจารย์ที่ปรึกษาติดตามผู้เรียน</h2><span class="role-badge" data-en="Advisor">อาจารย์ที่ปรึกษา</span></div>
+    <div class="card-b idx-grid">
+      <a class="idx-item" href="t01-advisees.html"><div class="t">t01 <span data-en="My advisees">ผู้เรียนในความดูแล</span></div><div class="caption">FR-07 NFR-01</div></a>
+      <a class="idx-item" href="t02-advisee-detail.html"><div class="t">t02 <span data-en="Advisee detail">รายละเอียดผู้เรียน</span></div><div class="caption">FR-07 NFR-02 FR-09 FR-19</div></a>
+    </div></section>
+
+  <section class="card"><div class="card-h"><h2 data-en="J4 Sender writes advice / J7 Receiver reads the room">J4 ผู้ส่งเขียนข้อความแนะนำ / J7 ผู้รับอ่านห้องรวม</h2><span class="role-badge" data-en="Student">นักศึกษา</span></div>
+    <div class="card-b idx-grid">
+      <a class="idx-item" href="c01-chat-room.html"><div class="t">c01 <span data-en="Shared advice room">ห้องรวมแชทแนะนำ</span></div><div class="caption">FR-20 FR-11 NFR-04 NFR-06 (J7)</div></a>
+      <a class="idx-item" href="c02-compose.html"><div class="t">c02 <span data-en="Compose advice">เขียนข้อความแนะนำ</span></div><div class="caption">FR-10 FR-16 FR-20 FR-11 FR-22 (J4)</div></a>
+      <a class="idx-item" href="c03-my-messages.html"><div class="t">c03 <span data-en="My messages">ข้อความของฉัน</span></div><div class="caption">FR-11 NFR-04 FR-15 FR-22 (J4)</div></a>
+    </div></section>
+
+  <section class="card"><div class="card-h"><h2 data-en="J5 Review and approve / J6 Manual unlock">J5 ตรวจและอนุมัติข้อความ / J6 ปลดล็อกด้วยมือ</h2><span class="role-badge" data-en="Teacher / Admin">อาจารย์ / Admin</span></div>
+    <div class="card-b idx-grid">
+      <a class="idx-item" href="r01-queue.html"><div class="t">r01 <span data-en="Approval queue">คิวรออนุมัติ</span></div><div class="caption">FR-13 FR-18 FR-21 NFR-04 (J5, J6)</div></a>
+      <a class="idx-item" href="r02-review.html"><div class="t">r02 <span data-en="Review message">ตรวจข้อความ</span></div><div class="caption">FR-12 FR-13 FR-14 FR-15 FR-17 FR-18 FR-21 FR-24 NFR-05 (J5)</div></a>
+      <a class="idx-item" href="r03-audit.html"><div class="t">r03 <span data-en="Audit trail">ประวัติการตรวจ</span></div><div class="caption">NFR-05 FR-15 FR-21 FR-22 FR-24 (J5)</div></a>
+    </div></section>
+
+  <p class="caption" data-en="Prototype only: this index and the top bar on each screen are not part of the product UI.">เฉพาะ prototype: หน้านี้และแถบด้านบนของแต่ละหน้าไม่ใช่ส่วนของ UI ระบบจริง</p>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

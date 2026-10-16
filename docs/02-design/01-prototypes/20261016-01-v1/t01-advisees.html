@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grade Runway — ผู้เรียนในความดูแล</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="t01-advisees">
+<main class="main" id="content">
+  <h1 data-en="My advisees">ผู้เรียนในความดูแล</h1>
+
+  <div class="alert info"><div class="a-body"><span data-en="Privacy (NFR-01): only learners assigned to you are listed. Everyone else is hidden.">ความเป็นส่วนตัว (NFR-01): แสดงเฉพาะผู้เรียนที่อยู่ในความดูแลของคุณ ผู้เรียนคนอื่นไม่แสดง</span></div></div>
+
+  <section class="card">
+    <div class="card-b">
+      <div class="filters">
+        <div class="field"><label for="q" data-en="Search name or ID">ค้นหาชื่อหรือรหัส</label><input id="q" type="search" placeholder="6X-0000" data-en-ph="6X-0000"></div>
+        <div class="field"><label for="f-level" data-en="Level">ระดับ</label><select id="f-level"><option value="all" data-en="All">ทั้งหมด</option><option value="danger" data-en="At risk">เสี่ยงสูง</option><option value="warn" data-en="Warning">เฝ้าระวัง</option><option value="ok" data-en="Normal">ปกติ</option></select></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-h"><h2 data-en="Learners (FR-07)">ผู้เรียน (FR-07)</h2><span class="caption"><span data-en="Showing">แสดง</span> <b id="adv-count">5</b> <span data-en="of 5">จาก 5</span> <span class="ph" data-en="sample data">ข้อมูลตัวอย่าง</span></span></div>
+    <div class="card-b flush tbl-wrap"><table class="tbl">
+      <thead><tr><th class="sort" data-en="ID">รหัส</th><th class="sort" data-en="Name">ชื่อ</th><th data-en="Level">ระดับ</th><th data-en="Conditions met">เงื่อนไขที่เข้า</th><th data-en="Data">ข้อมูล</th><th></th></tr></thead>
+      <tbody id="adv-body">
+        <tr data-level="danger"><td class="c">6X-00001</td><td data-en="Somjai Example">สมใจ ตัวอย่าง</td><td class="c"><span class="badge danger" data-en="At risk">เสี่ยงสูง</span></td><td class="c">2</td><td class="c"><span class="badge ok" data-en="Up to date">ทันสมัย</span></td><td class="c"><a class="btn btn-sm" href="t02-advisee-detail.html" data-en="View">ดู</a></td></tr>
+        <tr data-level="warn"><td class="c">6X-00002</td><td data-en="Somsak Example">สมศักดิ์ ตัวอย่าง</td><td class="c"><span class="badge warn" data-en="Warning">เฝ้าระวัง</span></td><td class="c">1</td><td class="c"><span class="badge info" data-en="Data outdated">ข้อมูลไม่ทันสมัย</span></td><td class="c"><a class="btn btn-sm" href="t02-advisee-detail.html" data-en="View">ดู</a></td></tr>
+        <tr data-level="ok"><td class="c">6X-00003</td><td data-en="Manee Example">มานี ตัวอย่าง</td><td class="c"><span class="badge ok" data-en="Normal">ปกติ</span></td><td class="c">0</td><td class="c"><span class="badge ok" data-en="Up to date">ทันสมัย</span></td><td class="c"><a class="btn btn-sm" href="t02-advisee-detail.html" data-en="View">ดู</a></td></tr>
+        <tr data-level="ok"><td class="c">6X-00004</td><td data-en="Piti Example">ปิติ ตัวอย่าง</td><td class="c"><span class="badge ok" data-en="Normal">ปกติ</span></td><td class="c">0</td><td class="c"><span class="badge ok" data-en="Up to date">ทันสมัย</span></td><td class="c"><a class="btn btn-sm" href="t02-advisee-detail.html" data-en="View">ดู</a></td></tr>
+        <tr data-level="warn"><td class="c">6X-00005</td><td data-en="Chuchai Example">ชูใจ ตัวอย่าง</td><td class="c"><span class="badge warn" data-en="Warning">เฝ้าระวัง</span></td><td class="c">1</td><td class="c"><span class="badge ok" data-en="Up to date">ทันสมัย</span></td><td class="c"><a class="btn btn-sm" href="t02-advisee-detail.html" data-en="View">ดู</a></td></tr>
+      </tbody></table></div>
+    <div class="pager"><span data-en="Rows per page: 10">จำนวนต่อหน้า: 10</span><span class="pages">1-5 of 5 &laquo; &lsaquo; <span class="pg">1</span> &rsaquo; &raquo;</span></div>
+  </section>
+
+  <p class="caption"><span class="ph" data-en="open question">ประเด็นเปิด</span> <span data-en="Whether advisors also receive alerts, or only view this list, is not decided in the spec. This prototype shows the list only.">spec ยังไม่กำหนดว่าครูได้รับแจ้งเตือนด้วยหรือดูในรายการนี้อย่างเดียว prototype แสดงเฉพาะรายการ</span></p>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

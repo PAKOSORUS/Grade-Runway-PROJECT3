@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grade Runway — ประวัติแจ้งเตือน/คำแนะนำ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="s04-history">
+<main class="main" id="content">
+  <h1 data-en="History">ประวัติการแจ้งเตือนและคำแนะนำ</h1>
+
+  <section class="card">
+    <div class="card-b">
+      <div class="filters">
+        <div class="field"><label for="ft" data-en="Type">ประเภท</label><select id="ft"><option data-en="All">ทั้งหมด</option><option data-en="Alerts">การแจ้งเตือน</option><option data-en="Advice">คำแนะนำ</option></select></div>
+        <div class="field"><label for="fd" data-en="Date range">ช่วงวันที่</label><input id="fd" type="text" value="01 Sep 2026 - 16 Oct 2026"></div>
+        <button type="button" class="btn btn-primary" data-toast="ค้นหาแล้ว (จำลอง)" data-toast-en="Searched (simulated)" data-en="Search">ค้นหา</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="seg mt-4" role="group" aria-label="Tabs">
+    <button type="button" class="active" aria-pressed="true" data-show="tab-alerts" data-en="Alerts">การแจ้งเตือน</button>
+    <button type="button" aria-pressed="false" data-show="tab-advice" data-en="Advice">คำแนะนำ</button>
+  </div>
+
+  <section class="card mt-4" id="tab-alerts" data-g="tab">
+    <div class="card-h"><h2 data-en="Alert history (FR-09)">ประวัติการแจ้งเตือน (FR-09)</h2><span class="ph" data-en="sample data">ข้อมูลตัวอย่าง</span></div>
+    <div class="card-b flush tbl-wrap"><table class="tbl">
+      <thead><tr><th class="sort" data-en="Date">วันที่</th><th data-en="Level">ระดับ</th><th data-en="Reason">เหตุผล</th><th data-en="Channel">ช่องทาง</th></tr></thead>
+      <tbody>
+        <tr><td class="c">16 Oct 2026</td><td class="c"><span class="badge danger" data-en="At risk">เสี่ยงสูง</span></td><td data-en="Attendance 68% (below 75%); grade declined 3 terms">เข้าเรียน 68% (ต่ำกว่า 75%); เกรดลดลง 3 ภาค</td><td class="c">in-app + email</td></tr>
+        <tr><td class="c">02 Oct 2026</td><td class="c"><span class="badge warn" data-en="Warning">เฝ้าระวัง</span></td><td data-en="Attendance 72% (below 75%)">เข้าเรียน 72% (ต่ำกว่า 75%)</td><td class="c">in-app + email</td></tr>
+        <tr><td class="c">18 Sep 2026</td><td class="c"><span class="badge warn" data-en="Warning">เฝ้าระวัง</span></td><td data-en="Grade declined 2 terms in a row">เกรดลดลงต่อเนื่อง 2 ภาค</td><td class="c">in-app + email</td></tr>
+      </tbody></table></div>
+    <div class="pager"><span data-en="Rows per page: 10">จำนวนต่อหน้า: 10</span><span class="pages">1-3 of 3 &laquo; &lsaquo; <span class="pg">1</span> &rsaquo; &raquo;</span></div>
+  </section>
+
+  <section class="card mt-4" id="tab-advice" data-g="tab" hidden>
+    <div class="card-h"><h2 data-en="Advice history (FR-09)">ประวัติคำแนะนำ (FR-09)</h2><span class="ph" data-en="sample data">ข้อมูลตัวอย่าง</span></div>
+    <div class="card-b flush tbl-wrap"><table class="tbl">
+      <thead><tr><th class="sort" data-en="Date">วันที่</th><th data-en="Advice">คำแนะนำ</th><th data-en="Based on">อ้างอิงจาก</th></tr></thead>
+      <tbody>
+        <tr><td class="c">16 Oct 2026</td><td data-en="Attend more of MATH101">เข้าเรียน MATH101 ให้มากขึ้น</td><td data-en="Missed 6 of last 12 sessions">ขาด 6 จาก 12 ครั้งล่าสุด</td></tr>
+        <tr><td class="c">16 Oct 2026</td><td data-en="Plan weekly review time">วางเวลาทบทวนรายสัปดาห์</td><td data-en="Grade dropped 3 terms">เกรดลดลง 3 ภาค</td></tr>
+        <tr><td class="c">02 Oct 2026</td><td data-en="Catch up on late assignments">ส่งงานที่ค้างให้ทัน</td><td data-en="2 late assignments">ส่งช้า 2 ชิ้น</td></tr>
+      </tbody></table></div>
+    <div class="pager"><span data-en="Rows per page: 10">จำนวนต่อหน้า: 10</span><span class="pages">1-3 of 3 &laquo; &lsaquo; <span class="pg">1</span> &rsaquo; &raquo;</span></div>
+  </section>
+
+  <p class="caption" data-en="Privacy (NFR-01): this list shows only your own history. Retention period is not decided yet.">ความเป็นส่วนตัว (NFR-01): แสดงเฉพาะประวัติของคุณเอง ระยะเวลาเก็บข้อมูลยังไม่กำหนด</p>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
