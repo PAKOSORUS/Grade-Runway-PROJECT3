@@ -14,15 +14,20 @@
   <div class="alert info" id="lock-active"><div class="a-body"><div class="a-title" data-en="You hold the lock (FR-18)">คุณล็อกข้อความนี้อยู่ (FR-18)</div>
     <div><span data-en="Time left before auto-unlock:">เวลาที่เหลือก่อนปลดล็อกอัตโนมัติ:</span> <b id="countdown">29:59</b> <span class="ph" data-en="T_unlock sample = 30 min">T_unlock ตัวอย่าง = 30 นาที</span></div>
     <div class="caption" data-en="Others cannot decide this message while you hold the lock.">ผู้ตรวจคนอื่นตัดสินข้อความนี้ไม่ได้ขณะที่คุณถือล็อก</div></div></div>
-  <div class="alert warn" id="lock-expired" hidden><div class="a-body"><div class="a-title" data-en="Your lock was released automatically (FR-21)">ล็อกของคุณถูกปลดอัตโนมัติแล้ว (FR-21)</div>
-    <div data-en="The message went back to the queue. Any decision you press now will be refused.">ข้อความกลับเข้าคิวแล้ว คำตัดสินที่คุณกดตอนนี้จะถูกปฏิเสธ</div></div></div>
+  <div class="alert warn" id="lock-expired" hidden><div class="a-body"><div class="a-title" id="lock-lost-title">ล็อกของคุณถูกปลดอัตโนมัติแล้ว (FR-21)</div>
+    <div id="lock-lost-body">ข้อความกลับเข้าคิวแล้ว คำตัดสินที่คุณกดตอนนี้จะถูกปฏิเสธ</div></div></div>
   <div class="alert danger" id="fr24-alert" hidden role="alert"><div class="a-body"><div class="a-title" data-en="Decision refused and not recorded (FR-24)">คำตัดสินถูกปฏิเสธและไม่ถูกบันทึก (FR-24)</div>
-    <div data-en="Your lock had expired, so this decision was not saved. The message is still in the approval queue and was not approved.">ล็อกของคุณหมดอายุแล้ว จึงไม่บันทึกคำตัดสินนี้ ข้อความยังอยู่ในคิวรออนุมัติและไม่ถูกอนุมัติ</div>
+    <div id="fr24-body">ล็อกของคุณหมดอายุแล้ว จึงไม่บันทึกคำตัดสินนี้ ข้อความยังอยู่ในคิวรออนุมัติและไม่ถูกอนุมัติ</div>
+    <div class="caption" data-en="Same outcome for every cause: not saved as a decision, still pending, not shown in the shared room (NFR-04).">ผลเหมือนกันทุกสาเหตุ: ไม่บันทึกเป็นคำตัดสิน ข้อความยังรออนุมัติ และไม่ปรากฏในห้องรวม (NFR-04)</div>
     <a href="r01-queue.html" data-en="Back to queue">กลับคิวรออนุมัติ</a></div></div>
 
   <div class="demo-bar">
-    <div class="caption" data-en="Prototype only: simulate that the lock expires before you decide">เฉพาะ prototype: จำลองว่าล็อกหมดอายุก่อนที่คุณจะตัดสิน</div>
-    <button type="button" class="btn btn-sm" id="btn-expire" data-en="Simulate lock expiry">จำลองล็อกหมดอายุ</button>
+    <div class="caption" data-en="Prototype only: simulate how you lose the lock before you decide (FR-24)">เฉพาะ prototype: จำลองว่าคุณเสียล็อกก่อนตัดสินด้วยสาเหตุใด (FR-24)</div>
+    <div class="seg" role="group" aria-label="Simulate lock loss">
+      <button type="button" id="btn-expire" data-en="Lock expired">ล็อกหมดอายุ</button>
+      <button type="button" id="btn-manual" data-en="Released manually by teacher/admin (FR-21)">ถูกอาจารย์/Admin ปลดมือ (FR-21)</button>
+      <button type="button" id="btn-taken" data-en="Another reviewer took the lock (FR-18)">ผู้ตรวจอื่นล็อกต่อ (FR-18)</button>
+    </div>
   </div>
 
   <div class="grid-2">

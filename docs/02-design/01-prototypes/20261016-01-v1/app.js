@@ -295,16 +295,38 @@
       secs = Math.max(0, secs - 1);
       var m = Math.floor(secs / 60), s = secs % 60;
       cd.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
-      if (secs === 0) expire();
+      if (secs === 0) expire('expire');
     }, 1000);
 
-    function expire() {
+    var CAUSES = {
+      expire: {
+        lost: [t('ล็อกของคุณถูกปลดอัตโนมัติแล้ว (FR-21)', 'Your lock was released automatically (FR-21)'),
+               t('ข้อความกลับเข้าคิวแล้ว คำตัดสินที่คุณกดตอนนี้จะถูกปฏิเสธ', 'The message went back to the queue. Any decision you press now will be refused.')],
+        refused: t('ล็อกของคุณหมดอายุแล้ว จึงไม่บันทึกคำตัดสินนี้ ข้อความยังอยู่ในคิวรออนุมัติและไม่ถูกอนุมัติ', 'Your lock had expired, so this decision was not saved. The message is still in the approval queue and was not approved.')
+      },
+      manual: {
+        lost: [t('ล็อกของคุณถูกอาจารย์/Admin ปลดด้วยมือ (FR-21)', 'Your lock was released manually by a teacher/admin (FR-21)'),
+               t('ข้อความกลับเข้าคิวแล้ว คำตัดสินที่คุณกดตอนนี้จะถูกปฏิเสธ', 'The message went back to the queue. Any decision you press now will be refused.')],
+        refused: t('ล็อกของคุณถูกอาจารย์/Admin ปลดด้วยมือแล้ว จึงไม่บันทึกคำตัดสินนี้ ข้อความยังอยู่ในคิวรออนุมัติและไม่ถูกอนุมัติ', 'Your lock was released manually by a teacher/admin, so this decision was not saved. The message is still in the approval queue and was not approved.')
+      },
+      taken: {
+        lost: [t('ผู้ตรวจคนอื่นล็อกข้อความนี้ต่อแล้ว (FR-18)', 'Another reviewer now holds the lock (FR-18)'),
+               t('คุณไม่ได้ถือล็อกที่ใช้ได้ คำตัดสินที่คุณกดตอนนี้จะถูกปฏิเสธ', 'You no longer hold a valid lock. Any decision you press now will be refused.')],
+        refused: t('ผู้ตรวจคนอื่นล็อกข้อความนี้ต่อแล้ว คุณไม่ได้ถือล็อกที่ใช้ได้ จึงไม่บันทึกคำตัดสินนี้ ข้อความยังอยู่ในคิวรออนุมัติและไม่ถูกอนุมัติ', 'Another reviewer now holds the lock and you no longer hold a valid one, so this decision was not saved. The message is still in the approval queue and was not approved.')
+      }
+    };
+    var cause = 'expire';
+    function expire(c) {
+      cause = (typeof c === 'string') ? c : 'expire';
       expired = true;
       clearInterval(timer);
+      document.getElementById('lock-lost-title').innerHTML = CAUSES[cause].lost[0];
+      document.getElementById('lock-lost-body').innerHTML = CAUSES[cause].lost[1];
       show('lock-active', false);
       show('lock-expired', true);
     }
     function blocked() {
+      document.getElementById('fr24-body').innerHTML = CAUSES[cause].refused;
       show('fr24-alert', true);
       show('decision-area', false);
       show('reject-box', false);
@@ -312,7 +334,9 @@
       var inputs = f.querySelectorAll('input,button,textarea');
       for (var i = 0; i < inputs.length; i++) inputs[i].disabled = true;
     }
-    document.getElementById('btn-expire').addEventListener('click', expire);
+    document.getElementById('btn-expire').addEventListener('click', function () { expire('expire'); });
+    document.getElementById('btn-manual').addEventListener('click', function () { expire('manual'); });
+    document.getElementById('btn-taken').addEventListener('click', function () { expire('taken'); });
 
     var radios = document.querySelectorAll('input[name=cls]');
     function onCls() {
