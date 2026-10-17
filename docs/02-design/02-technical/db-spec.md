@@ -19,7 +19,7 @@ Spec ต้นทาง: [[../../01-requirements/01-spec/20261014-01-student-ris
 |-------|--------|---------|--------|
 | ผู้ใช้ | User, UserRole, AdvisorAssignment | บัญชี บทบาท และความสัมพันธ์ครู-ผู้เรียนในความดูแล พร้อมแหล่งที่มา (นำเข้า/Admin แก้) | FR-25, FR-26, FR-07, NFR-01 |
 | เกณฑ์ผู้ผ่านเกณฑ์ | EligibilityCriteria, EligibilityCriteriaItem, EligibilityResult | เกณฑ์ที่ Admin ตั้ง และผลจริง/เท็จที่ประเมินล่วงหน้าเก็บไว้ต่อนักศึกษา | FR-27, FR-16 |
-| ค่าตั้ง | LegacyConnectionConfig, SystemPolicy, RiskThresholdRule | ค่าการเชื่อมต่อ นโยบายระบบ (ความถี่ซิงก์ เวลาล็อกหมดอายุ นโยบายแสดงชื่อ) และ threshold | FR-01, FR-08, FR-21, NFR-03, NFR-06 |
+| ค่าตั้ง | LegacyConnectionConfig, SystemPolicy, RiskThresholdRule | ค่าการเชื่อมต่อ นโยบายระบบ (ความถี่ซิงก์ เวลาล็อกหมดอายุ นโยบายแสดงชื่อ เกณฑ์สัดส่วนรายการนำเข้าที่หาย) และ threshold | FR-01, FR-08, FR-21, FR-25, FR-26, NFR-03, NFR-06 |
 | ซิงก์และข้อมูลการเรียน | SyncRun, SyncState, GradeRecord, AttendanceRecord, AssignmentRecord | ผลแต่ละรอบซิงก์ สถานะข้อมูลปัจจุบัน และข้อมูลที่ดึงมา | FR-01, FR-19, FR-23, NFR-03 |
 | ประเมินความเสี่ยง | RiskAssessment, RiskFinding, Recommendation | ผลประเมิน เงื่อนไขที่เข้า (ย้อนอธิบายได้) และคำแนะนำ | FR-02, FR-03, FR-05, FR-09, NFR-02 |
 | แจ้งเตือน | Notification, NotificationDelivery | การแจ้งเตือนทุกชนิดและผลการส่งรายช่องทาง | FR-04, FR-09, FR-15, FR-19, FR-23, FR-24 |
