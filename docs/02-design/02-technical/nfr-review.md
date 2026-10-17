@@ -1,6 +1,6 @@
 # NFR Review
 
-ผลตรวจว่าการออกแบบเชิงเทคนิครองรับ NFR ทุกตัวใน [[../../01-requirements/backlog|Backlog]] หรือไม่ เทียบกับ [[architecture]], [[api-spec]] (OP-01..OP-43), [[db-spec]] และ 26 ไฟล์ใน `detailed-design/` (ตรวจซ้ำรอบ 2 เมื่อ 2026-10-17 หลัง architecture เพิ่มโมดูล System Settings และปรับ detailed-design) เอกสารนี้ตรวจและรายงานอย่างเดียว ไม่ได้แก้เอกสารเชิงเทคนิคใดๆ และไม่ระบุ technology
+ผลตรวจว่าการออกแบบเชิงเทคนิครองรับ NFR ทุกตัวใน [[../../01-requirements/backlog|Backlog]] หรือไม่ เทียบกับ [[architecture]], [[api-spec]] (OP-01..OP-43), [[db-spec]] และ 26 ไฟล์ใน `detailed-design/` (ตรวจซ้ำรอบ 3 เมื่อ 2026-10-17 หลัง db-spec แก้เฉพาะข้อความสรุปหัวข้อ 2 แถวค่าตั้ง ผลไม่เปลี่ยนจากรอบ 2 ซึ่งตรวจหลัง architecture เพิ่มโมดูล System Settings และปรับ detailed-design) เอกสารนี้ตรวจและรายงานอย่างเดียว ไม่ได้แก้เอกสารเชิงเทคนิคใดๆ และไม่ระบุ technology
 
 ## 1. ตารางสรุป
 
