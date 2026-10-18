@@ -2,7 +2,7 @@
 
 สถาปัตยกรรมระดับ logical/conceptual ของระบบ ที่มาจาก [[../feature-list|Feature List]], [[../user-journey|User Journey]] และ NFR ใน [[../../01-requirements/backlog|Backlog]]
 
-เอกสารนี้เขียนเป็น logical component ล้วน ไม่ระบุ technology ใดๆ เพราะ `technology-stack.md` ยังไม่มีเนื้อหา (ยังไม่ตัดสินใจ) รายละเอียดระดับ implementation เป็นงานของ detailed-design ชั้นถัดไป
+เอกสารนี้เขียนเป็น logical component ล้วน ไม่ระบุ technology ใดๆ โดยตั้งใจ technology ที่ตัดสินใจแล้วอยู่ใน [[technology-stack]] (ตอนนี้ตัดสินใจเฉพาะที่เก็บข้อมูล) รายละเอียดระดับ implementation เป็นงานของ detailed-design ชั้นถัดไป
 
 Spec ต้นทาง: [[../../01-requirements/01-spec/20261014-01-student-risk-alert|REQ-01 ติดตามและแจ้งเตือนความเสี่ยง]], [[../../01-requirements/01-spec/20261014-02-peer-advice-chat|REQ-02 ช่องแชทแนะนำแนวทางการเรียน]], [[../../01-requirements/01-spec/20261016-01-sync-failure-handling|REQ-03 ซิงก์ล้มเหลว]], [[../../01-requirements/01-spec/20261016-02-peer-chat-recipients-lock-resubmit|REQ-04 ห้องรวม ปลดล็อก ส่งใหม่]], [[../../01-requirements/01-spec/20261016-03-first-sync-failure-and-expired-lock-decision|REQ-05 ซิงก์ครั้งแรกล้มเหลว และคำตัดสินเมื่อไม่ถือล็อก]], [[../../01-requirements/01-spec/20261017-01-user-role-advisor-eligibility-management|REQ-06 จัดการบัญชี บทบาท ความสัมพันธ์ครู-ผู้เรียน และเกณฑ์ผู้ผ่านเกณฑ์]]
 
