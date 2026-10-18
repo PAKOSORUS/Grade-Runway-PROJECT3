@@ -9,7 +9,7 @@
 | ที่เก็บข้อมูลหลัก (Primary Data Store) | ตัดสินใจแล้ว (ผู้ใช้ยืนยัน 2026-10-18) | Cloud Firestore โปรเจกต์ `grade-runway-project` (database `(default)`) | มีข้อมูลตัวอย่างอยู่ในฐานข้อมูลจริงแล้ว ผ่าน `scripts/seed-firestore/` (PR #10) |
 | ภาษา/รันไทม์ของสคริปต์ seed | ใช้งานแล้ว (เฉพาะสคริปต์) | Node.js พร้อม `firebase-admin` | `scripts/seed-firestore/package.json` |
 | Backend Service | ยังไม่ตัดสินใจ | - | |
-| Client (หน้าจอผู้ใช้) | ยังไม่ตัดสินใจ | - | prototype เป็น HTML mockup เท่านั้น |
+| Client (หน้าจอผู้ใช้) | ยังไม่ตัดสินใจ | - | prototype เป็น HTML mockup เท่านั้น; มีหน้าทดลอง `web/review-queue/` (HTML + JavaScript ล้วน, Firebase Web SDK ผ่าน CDN, อ่านอย่างเดียว) ไม่ถือเป็นการเลือก stack ฝั่ง Client |
 | การยืนยันตัวตน/เข้าสู่ระบบ | ยังไม่ตัดสินใจ | - | อยู่นอกขอบเขตตาม [[../../01-requirements/01-spec/20261017-01-user-role-advisor-eligibility-management|REQ-06]] |
 | Scheduler | ยังไม่ตัดสินใจ | - | |
 | บริการส่งอีเมล | ยังไม่ตัดสินใจ | - | FR-04 |
@@ -52,7 +52,7 @@
 | NFR-05, NFR-07 เพิ่มอย่างเดียว | `auditEvents` และ `configChangeAudits` ห้ามแก้/ลบ ต้องบังคับด้วยสิทธิ์ของ Firestore (Security Rules) และให้เขียนผ่าน Backend เท่านั้น |
 | LegacyConnectionConfig | ข้อมูลยืนยันตัวตนกับระบบเดิมห้ามส่งกลับใน operation ใด และห้ามคัดลอกลง audit ควรพิจารณาไม่เก็บค่านี้ใน Firestore |
 | ชื่อที่จดซ้ำ | เมื่อ `users.name` เปลี่ยน ต้องกำหนดกติกาว่าชื่อที่จดซ้ำจะอัปเดตตามหรือคงค่า ณ เวลานั้น (audit ต้องการ ณ เวลานั้น, หน้าจอต้องการค่าปัจจุบัน) |
-| Security Rules | ร่างไว้ที่ `firebase/firestore.rules` เป็นแบบปฏิเสธการเข้าถึงจาก Client ทั้งหมด (Backend และสคริปต์ seed ใช้ Admin SDK ซึ่งข้าม rules) สถานะ: ยังไม่ได้ deploy จนกว่าผู้ใช้จะวางใน Console แท็บ Rules และยืนยัน ถ้าต้องให้ Client เข้าถึง Firestore ตรง ต้องเขียน rules รายคอลเลกชันใหม่และทบทวนตารางนี้ก่อน |
+| Security Rules | ร่างไว้ที่ `firebase/firestore.rules` ปฏิเสธการเข้าถึงจาก Client ทุก collection (Backend และสคริปต์ seed ใช้ Admin SDK ซึ่งข้าม rules) **ยกเว้นชั่วคราวสำหรับ prototype:** เปิดอ่าน `chatMessages` ให้ทุกคน (ไม่มี login) เพื่อให้หน้า `web/review-queue/` ทดสอบกับข้อมูลตัวอย่างได้ ข้อนี้ขัด NFR-04 และ NFR-06 จึง **ห้ามใช้กับข้อมูลจริง** ต้องเปลี่ยนเป็น rules ตามบทบาท (Firebase Auth) หรือผ่าน Backend ก่อน สถานะ deploy: ผู้ใช้วางใน Console เอง (ผมไม่ได้ตรวจ rules ที่ใช้อยู่จริง) |
 
 ## 4. สคริปต์ข้อมูลตัวอย่าง
 
