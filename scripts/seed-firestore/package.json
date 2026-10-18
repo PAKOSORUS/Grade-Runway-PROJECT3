@@ -1,0 +1,14 @@
+{
+  "name": "seed-firestore",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Seed sample data (users, chatMessages, eligibilityCriteria) into Firestore",
+  "main": "seed.js",
+  "scripts": {
+    "seed:dry": "node seed.js",
+    "seed:write": "node seed.js --write"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  }
+}
