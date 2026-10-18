@@ -1,0 +1,61 @@
+# Technology Stack
+
+บันทึกการตัดสินใจเรื่อง technology ของระบบ เอกสารชั้น logical ([[architecture]], [[api-spec]], [[db-spec]], [[detailed-design/data-sync|detailed-design]]) ยังคงเขียนแบบไม่ผูก technology ตามเดิม เอกสารนี้เป็นที่เดียวที่ระบุ technology และ mapping จากโมเดล logical ไปยัง technology ที่เลือก
+
+## 1. สถานะการตัดสินใจ
+
+| หัวข้อ | สถานะ | ค่า | หลักฐาน |
+|--------|-------|-----|---------|
+| ที่เก็บข้อมูลหลัก (Primary Data Store) | ใช้งานจริงแล้ว รอผู้ใช้ยืนยันเป็นการตัดสินใจ stack อย่างเป็นทางการ | Cloud Firestore โปรเจกต์ `grade-runway-project` (database `(default)`) | มีข้อมูลตัวอย่างอยู่ในฐานข้อมูลจริงแล้ว ผ่าน `scripts/seed-firestore/` (PR #10) |
+| ภาษา/รันไทม์ของสคริปต์ seed | ใช้งานแล้ว (เฉพาะสคริปต์) | Node.js พร้อม `firebase-admin` | `scripts/seed-firestore/package.json` |
+| Backend Service | ยังไม่ตัดสินใจ | - | |
+| Client (หน้าจอผู้ใช้) | ยังไม่ตัดสินใจ | - | prototype เป็น HTML mockup เท่านั้น |
+| การยืนยันตัวตน/เข้าสู่ระบบ | ยังไม่ตัดสินใจ | - | อยู่นอกขอบเขตตาม [[../../01-requirements/01-spec/20261017-01-user-role-advisor-eligibility-management|REQ-06]] |
+| Scheduler | ยังไม่ตัดสินใจ | - | |
+| บริการส่งอีเมล | ยังไม่ตัดสินใจ | - | FR-04 |
+| บริการ AI วิเคราะห์ข้อความ | ยังไม่ตัดสินใจ | - | FR-17 ระดับต่ำ ไม่บังคับ |
+| การ deploy/โฮสต์ | ยังไม่ตัดสินใจ | - | |
+
+หมายเหตุ: การเลือก Firestore มาจากการใช้งานจริงในเซสชัน 2026-10-18 ยังไม่มีบันทึกว่าผู้ใช้ตัดสินใจเป็น stack ของระบบ จึงระบุสถานะ "รอผู้ใช้ยืนยัน" ถ้าไม่ยืนยัน ให้ลบแถวนี้และส่วนที่ 2-3 ออก เอกสาร logical ไม่ต้องแก้
+
+## 2. Mapping จาก entity (db-spec) ไปยัง collection ใน Firestore
+
+ออกแบบตามรูปแบบ collection → ฟิลด์ ที่จดชื่อซ้ำไว้ในเอกสารเพื่อไม่ต้องอ่านข้าม collection ตอนแสดงผล ชื่อฟิลด์เป็นอังกฤษ camelCase ค่าตัวเลือกใน seed เป็นอังกฤษ (เช่น `pending`, `approved`, `rejected`) ตรงกับค่าภาษาไทยใน [[db-spec]] ตามนี้
+
+| Collection (subcollection) | Entity ใน [[db-spec]] | ใน seed | หมายเหตุ |
+|----------------------------|-----------------------|---------|----------|
+| `users` | 3.1 User, 3.2 UserRole | มี 5 เอกสาร | บทบาทรวมเป็น array `roles` (`student`, `advisor`, `lecturer`, `admin`) ถ้าต้องเก็บสถานะ/แหล่งที่มารายบทบาทต้องแยกเป็น collection |
+| `advisorAssignments` | 3.3 AdvisorAssignment | ไม่มี | จดชื่อซ้ำ `advisorName`, `learnerName` |
+| `eligibilityCriteria` (`items`) | 3.20 | มี 1 เอกสาร (`criteria-v1`) | เวอร์ชันเก่าไม่แก้/ไม่ลบ |
+| `eligibilityResults` | 3.21 | ไม่มี | จดชื่อซ้ำ `learnerName` |
+| `riskThresholdRules` | 3.6 | ไม่มี | |
+| `syncRuns`, `syncState`, `systemPolicy`, `legacyConnection` | 3.7, 3.8, 3.5, 3.4 | ไม่มี | สามตัวหลังมีเอกสารเดียว |
+| `gradeRecords`, `attendanceRecords`, `assignmentRecords` | 3.9 | ไม่มี | จดชื่อซ้ำ `learnerName` |
+| `riskAssessments` (`findings`) | 3.10, 3.11 | ไม่มี | `findings` เก็บสำเนา threshold ที่ใช้จริง (NFR-02) |
+| `recommendations` | 3.12 | ไม่มี | |
+| `notifications` (`deliveries`) | 3.13, 3.14 | ไม่มี | จดชื่อซ้ำ `recipientName` |
+| `chatMessages` (`reviewLocks`, `reviewDecision`, `aiSuggestions`) | 3.15-3.18 | มี 3 เอกสาร | ข้อความ `msg-001` rejected, `msg-002` approved, `msg-003` pending (ส่งใหม่จาก `msg-001`) |
+| `auditEvents` | 3.19 | ไม่มี | เพิ่มอย่างเดียว |
+| `configChangeAudits` | 3.22 | ไม่มี | เพิ่มอย่างเดียว |
+
+เอกสารตัวอย่างทุกรายการมี `_seed: true` เพื่อกรองและลบทิ้งทีหลัง
+
+## 3. ข้อควรระวังเมื่อใช้ Firestore (ผูกกับข้อกำหนดที่มีอยู่)
+
+ข้อสังเกตจากข้อกำหนดเดิม ยังไม่ใช่การตัดสินใจออกแบบ ต้องตัดสินตอนเขียน detailed design จริง
+
+| ข้อกำหนด | ข้อควรระวัง |
+|----------|-------------|
+| NFR-06 นโยบายแสดงชื่อผู้ส่ง | `chatMessages.senderName` จดซ้ำไว้ได้ แต่ต้องตัดออกที่ Backend ก่อนส่งถึง Client เมื่อนโยบายเป็น "ซ่อนชื่อ" ห้ามให้ Client อ่านเอกสารจาก Firestore ตรง |
+| FR-18, FR-21, FR-24, NFR-04, NFR-05 | การตรวจล็อก บันทึกคำตัดสิน เปลี่ยนสถานะข้อความ และ audit ต้องสำเร็จพร้อมกันหรือไม่สำเร็จเลย ต้องทำผ่านการเขียนแบบ transaction/batch ใน Backend |
+| FR-22 ส่งใหม่ครั้งละหนึ่ง | การตรวจว่าข้อความเดิมมีข้อความใหม่ที่ยังรออนุมัติ/อนุมัติแล้วหรือไม่ ต้องอยู่ใน transaction เดียวกับการสร้างข้อความใหม่ |
+| NFR-05, NFR-07 เพิ่มอย่างเดียว | `auditEvents` และ `configChangeAudits` ห้ามแก้/ลบ ต้องบังคับด้วยสิทธิ์ของ Firestore (Security Rules) และให้เขียนผ่าน Backend เท่านั้น |
+| LegacyConnectionConfig | ข้อมูลยืนยันตัวตนกับระบบเดิมห้ามส่งกลับใน operation ใด และห้ามคัดลอกลง audit ควรพิจารณาไม่เก็บค่านี้ใน Firestore |
+| ชื่อที่จดซ้ำ | เมื่อ `users.name` เปลี่ยน ต้องกำหนดกติกาว่าชื่อที่จดซ้ำจะอัปเดตตามหรือคงค่า ณ เวลานั้น (audit ต้องการ ณ เวลานั้น, หน้าจอต้องการค่าปัจจุบัน) |
+| Security Rules | ยังไม่ได้ตั้งหรือตรวจในรอบนี้ ต้องตรวจก่อนใช้งานจริงกับข้อมูลจริง |
+
+## 4. สคริปต์ข้อมูลตัวอย่าง
+
+- ที่ตั้ง: `scripts/seed-firestore/` (`seed.js`, `package.json`)
+- โหมดเริ่มต้นเป็น dry-run ใส่ `--write` เพื่อเขียนเฉพาะเอกสารที่ยังไม่มี และ `--force` เพื่อทับ
+- credentials ผู้ใช้ตั้งเองผ่าน `GOOGLE_APPLICATION_CREDENTIALS` สคริปต์ไม่อ่านหรือเก็บ key และห้ามนำไฟล์ key เข้า repo
