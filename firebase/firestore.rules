@@ -17,6 +17,19 @@ rules_version = '2';
 // per-collection rules and review technology-stack.md section 3 first.
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // !!! PROTOTYPE ONLY - TEMPORARY - REMOVE BEFORE USING REAL DATA !!!
+    // Anyone on the internet can READ every chatMessages document (all
+    // statuses, with senderName), because there is no login yet. This breaks
+    // NFR-04 (only approved messages visible) and NFR-06 (Backend strips
+    // senderName). It exists only so web/review-queue can be tried against the
+    // seeded sample data (_seed: true). Writes stay denied. Replace with
+    // role-based rules (Firebase Auth) or a Backend before real data.
+    match /chatMessages/{messageId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
