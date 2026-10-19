@@ -1,32 +1,44 @@
 rules_version = '2';
 
-// Deny all direct client access to every collection.
+// Role-based rules (Firebase Authentication).
 //
-// Why: the design routes ALL reads and writes through the Backend Service
-// (architecture.md, technology-stack.md section 3). The Backend and the seed
-// script use the Admin SDK, which bypasses these rules, so they keep working.
-// Denying clients covers:
-//   - NFR-06: chatMessages.senderName must be stripped by the Backend before
-//     anything reaches a Client
-//   - NFR-04: only approved messages may be readable, filtered at one point
-//   - NFR-05 / NFR-07: auditEvents and configChangeAudits are append-only and
-//     written by the Backend only
-//   - FR-25: legacy connection credentials must never reach a Client
+// Design: all writes and all student/advisor reads go through the Backend
+// (Cloud Functions + Admin SDK, which bypasses these rules). See
+// technology-stack.md section 3. The only direct client access is READ of
+// chatMessages by lecturer/admin reviewers (review queue).
+//   - NFR-04: students never read chatMessages directly (approved-only
+//     filtering happens in the Backend)
+//   - NFR-06: senderName is visible only to reviewers here; the Backend strips
+//     it for everyone else
+//   - NFR-05 / NFR-07: auditEvents and configChangeAudits are never readable
+//     or writable by a client
+//   - FR-25: legacy connection credentials never reach a client
 //
-// If a Client ever needs direct Firestore access, replace this with
-// per-collection rules and review technology-stack.md section 3 first.
+// ASSUMPTION: the role comes from users/{request.auth.uid}.roles, so the
+// users document id MUST equal the Firebase Auth uid. The seeded users
+// (user-001 ...) do not match any Auth uid, so no seeded account can pass
+// these rules until real accounts are created with matching ids.
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // !!! PROTOTYPE ONLY - TEMPORARY - REMOVE BEFORE USING REAL DATA !!!
-    // Anyone on the internet can READ every chatMessages document (all
-    // statuses, with senderName), because there is no login yet. This breaks
-    // NFR-04 (only approved messages visible) and NFR-06 (Backend strips
-    // senderName). It exists only so web/review-queue can be tried against the
-    // seeded sample data (_seed: true). Writes stay denied. Replace with
-    // role-based rules (Firebase Auth) or a Backend before real data.
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Active account holding at least one of the reviewer roles.
+    function isReviewer() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && userDoc().status == 'active'
+        && userDoc().roles.hasAny(['lecturer', 'admin']);
+    }
+
     match /chatMessages/{messageId} {
-      allow read: if true;
+      allow read: if isReviewer();
       allow write: if false;
     }
 

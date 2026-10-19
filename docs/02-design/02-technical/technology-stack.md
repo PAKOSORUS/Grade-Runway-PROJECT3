@@ -53,7 +53,7 @@
 | NFR-05, NFR-07 เพิ่มอย่างเดียว | `auditEvents` และ `configChangeAudits` ห้ามแก้/ลบ ต้องบังคับด้วยสิทธิ์ของ Firestore (Security Rules) และให้เขียนผ่าน Backend เท่านั้น |
 | LegacyConnectionConfig | ข้อมูลยืนยันตัวตนกับระบบเดิมห้ามส่งกลับใน operation ใด และห้ามคัดลอกลง audit ควรพิจารณาไม่เก็บค่านี้ใน Firestore |
 | ชื่อที่จดซ้ำ | เมื่อ `users.name` เปลี่ยน ต้องกำหนดกติกาว่าชื่อที่จดซ้ำจะอัปเดตตามหรือคงค่า ณ เวลานั้น (audit ต้องการ ณ เวลานั้น, หน้าจอต้องการค่าปัจจุบัน) |
-| Security Rules | ร่างไว้ที่ `firebase/firestore.rules` ปฏิเสธการเข้าถึงจาก Client ทุก collection (Backend และสคริปต์ seed ใช้ Admin SDK ซึ่งข้าม rules) **ยกเว้นชั่วคราวสำหรับ prototype:** เปิดอ่าน `chatMessages` ให้ทุกคน (ไม่มี login) เพื่อให้หน้า `web/review-queue/` ทดสอบกับข้อมูลตัวอย่างได้ ข้อนี้ขัด NFR-04 และ NFR-06 จึง **ห้ามใช้กับข้อมูลจริง** ต้องเปลี่ยนเป็น rules ตามบทบาท (Firebase Auth) หรือผ่าน Backend ก่อน สถานะ deploy: ผู้ใช้วางใน Console เอง (ผมไม่ได้ตรวจ rules ที่ใช้อยู่จริง) |
+| Security Rules | ร่างไว้ที่ `firebase/firestore.rules` (ฉบับตามบทบาท 2026-10-19): Client อ่าน `chatMessages` ได้เฉพาะบัญชี `active` ที่มีบทบาท `lecturer` หรือ `admin` (ต้อง login ด้วย Firebase Auth) อย่างเดียว การเขียนทุกอย่างและ collection อื่นทั้งหมดปฏิเสธ (Backend และสคริปต์ seed ใช้ Admin SDK ซึ่งข้าม rules) **ข้อสมมติ:** rules อ่านบทบาทจาก `users/{auth uid}` จึงต้องตั้ง id เอกสาร `users` ให้เท่ากับ Firebase Auth uid; ผู้ใช้ตัวอย่าง `user-001`... ไม่ตรง uid จึงยังอ่านผ่าน rules ไม่ได้จนกว่าจะสร้างบัญชีจริง **ผลข้างเคียง:** หน้า `web/review-queue/` ยังไม่มีการ login จะอ่านไม่ได้เมื่อวาง rules นี้ ต้องเพิ่ม Firebase Auth sign-in ก่อน สถานะ deploy: ยังไม่ deploy ผู้ใช้วางใน Console เอง (ไม่ได้ตรวจ rules ที่ใช้อยู่จริง) |
 
 ## 4. สคริปต์ข้อมูลตัวอย่าง
 
