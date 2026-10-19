@@ -8,15 +8,16 @@
 |--------|-------|-----|---------|
 | ที่เก็บข้อมูลหลัก (Primary Data Store) | ตัดสินใจแล้ว (ผู้ใช้ยืนยัน 2026-10-18) | Cloud Firestore โปรเจกต์ `grade-runway-project` (database `(default)`) | มีข้อมูลตัวอย่างอยู่ในฐานข้อมูลจริงแล้ว ผ่าน `scripts/seed-firestore/` (PR #10) |
 | ภาษา/รันไทม์ของสคริปต์ seed | ใช้งานแล้ว (เฉพาะสคริปต์) | Node.js พร้อม `firebase-admin` | `scripts/seed-firestore/package.json` |
-| Backend Service | ยังไม่ตัดสินใจ | - | |
-| Client (หน้าจอผู้ใช้) | ยังไม่ตัดสินใจ | - | prototype เป็น HTML mockup เท่านั้น; มีหน้าทดลอง `web/review-queue/` (HTML + JavaScript ล้วน, Firebase Web SDK ผ่าน CDN, อ่านอย่างเดียว) ไม่ถือเป็นการเลือก stack ฝั่ง Client |
-| การยืนยันตัวตน/เข้าสู่ระบบ | ยังไม่ตัดสินใจ | - | อยู่นอกขอบเขตตาม [[../../01-requirements/01-spec/20261017-01-user-role-advisor-eligibility-management|REQ-06]] |
+| Backend Service | ตัดสินใจแล้ว (ผู้ใช้ยืนยัน 2026-10-19) | Cloud Functions for Firebase + Firebase Admin SDK (Node.js) | Admin SDK ทำ transaction/batch ได้ (FR-18, FR-21, FR-22, FR-24) ข้าม Security Rules และตัดชื่อผู้ส่งก่อนถึง Client (NFR-06) ภาษาเดียวกับสคริปต์ seed |
+| Client (หน้าจอผู้ใช้) | ตัดสินใจแล้ว (ผู้ใช้ยืนยัน 2026-10-19) | React + Vite | แยกหน้าตามบทบาทได้ดี หน้าทดลอง `web/review-queue/` (HTML + JavaScript ล้วน, อ่านอย่างเดียว) เป็น prototype ยังไม่ย้ายมา React |
+| การยืนยันตัวตน/เข้าสู่ระบบ | ตัดสินใจแล้ว (ผู้ใช้ยืนยัน 2026-10-19) | Firebase Authentication | บทบาทที่ใช้ตัดสินสิทธิ์ยังอ่านจากข้อมูลบทบาทในระบบนี้ (`users.roles`) ตามหลักใน [[architecture]] ไม่ใช่จากผู้ให้บริการ login; วิธี login (อีเมล/รหัสผ่าน, Google, SSO) ยังไม่กำหนด การยืนยันตัวตนเดิมอยู่นอกขอบเขตของ [[../../01-requirements/01-spec/20261017-01-user-role-advisor-eligibility-management|REQ-06]] การเลือกนี้เป็นเรื่อง technology เท่านั้น |
 | Scheduler | ยังไม่ตัดสินใจ | - | |
 | บริการส่งอีเมล | ยังไม่ตัดสินใจ | - | FR-04 |
 | บริการ AI วิเคราะห์ข้อความ | ยังไม่ตัดสินใจ | - | FR-17 ระดับต่ำ ไม่บังคับ |
 | การ deploy/โฮสต์ | ยังไม่ตัดสินใจ | - | |
 
-หมายเหตุ: ผู้ใช้ยืนยันเมื่อ 2026-10-18 ว่า Firestore เป็นที่เก็บข้อมูลของระบบ หัวข้ออื่นยังไม่ตัดสินใจ เอกสาร logical ยังคงไม่ผูก technology
+หมายเหตุ: ผู้ใช้ยืนยัน Firestore เมื่อ 2026-10-18 และ Backend/Client/Auth เมื่อ 2026-10-19 ส่วน Scheduler, อีเมล, AI, deploy ยังไม่ตัดสินใจ (ผู้ใช้เลือกเลื่อนเมื่อ 2026-10-19) เอกสาร logical ยังคงไม่ผูก technology
+ข้อเสนอเดิมที่ยังไม่ได้ยืนยัน (ไม่ใช่การตัดสินใจ): Cloud Scheduler เรียก Functions ตามเวลา และ SendGrid หรือ SMTP ของมหาวิทยาลัยสำหรับอีเมล
 
 ## 2. Mapping จาก entity (db-spec) ไปยัง collection ใน Firestore
 
