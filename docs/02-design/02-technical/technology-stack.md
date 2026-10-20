@@ -65,5 +65,7 @@
 
 - ที่ตั้ง: `functions/` (Node.js, `firebase-functions` v2, `firebase-admin`) และ `firebase.json` ที่ราก repo โครงเป็น handler ธรรมดาใน `functions/lib/` ที่ทดสอบกับ Firestore emulator ได้ และ `functions/index.js` ที่ห่อเป็น callable
 - Phase 1 (เฉพาะส่วนที่ทำแล้ว): ตรวจตัวตนและบทบาทจาก `users/{auth uid}` (`lib/access.js`), Admin เพิ่ม/แก้/ปิดบัญชีและบทบาท, เพิ่ม/ถอน/โอนผู้เรียนในความดูแล (`lib/accounts.js`) และบันทึก audit ในธุรกรรมเดียวกันที่ collection `configChangeAudits` (`lib/audit.js` ใช้ซ้ำกับหมวดอื่นได้)
-- ยังไม่ทำ: นำเข้าบัญชีจากระบบเดิม (T-1-02, T-1-04), การจำกัดการอ่านตามผู้เรียน/ครู (T-1-07), หน้า Admin ดูประวัติ (T-1-09), หน้าจอ Admin
-- ทดสอบ: `cd functions && npm test` (Firestore emulator ต้องใช้ Java 21 ขึ้นไป) ผ่าน 11 ข้อ ยังไม่ได้ deploy และไม่ได้ทดสอบกับ Firebase จริง (ต้องใช้แผน Blaze ผู้ใช้เลือกเลื่อนไว้)
+- การจำกัดการอ่านตามผู้เรียน/ครู (T-1-07, `lib/learners.js`): ผู้เรียนอ่านเฉพาะของตน ครูอ่านเฉพาะผู้เรียนที่มีความสัมพันธ์ `active` บทบาทอื่นรวมถึง Admin ถูกปฏิเสธ (ตั้งใจเข้มไว้ก่อน ขยายได้ถ้าข้อกำหนดเปลี่ยน) ฟีเจอร์ที่อ่านข้อมูลผู้เรียนใน phase ถัดไปต้องเรียก `requireLearnerAccess`
+- ประวัติการเปลี่ยนแปลงสำหรับ Admin (T-1-09, `lib/history.js`): อ่านอย่างเดียว กรองตาม category/targetId ได้ ต้องมี composite index ตาม `firestore.indexes.json` เมื่อ deploy จริง
+- ยังไม่ทำ: นำเข้าบัญชีจากระบบเดิม (T-1-02, T-1-04, T-1-05), หน้าจอ Admin
+- ทดสอบ: `cd functions && npm test` (Firestore emulator ต้องใช้ Java 21 ขึ้นไป) ผ่าน 20 ข้อ ยังไม่ได้ deploy และไม่ได้ทดสอบกับ Firebase จริง (ต้องใช้แผน Blaze ผู้ใช้เลือกเลื่อนไว้)
