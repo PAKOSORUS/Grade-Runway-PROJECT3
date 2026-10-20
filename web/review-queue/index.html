@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Grade Runway — รายการข้อความรอตรวจ</title>
+  <title>Grade Runway — ตรวจข้อความ</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
@@ -51,16 +51,23 @@
       box-shadow: 0 1px 4px var(--color-shadow);
       overflow-x: auto;
     }
-    table { width: 100%; border-collapse: collapse; min-width: 640px; }
-    th {
-      background: var(--color-brand);
-      color: var(--color-text-on-brand);
-      font-weight: 600;
-      padding: 12px;
-      text-align: left;
-    }
-    td { padding: 12px; border-bottom: 1px solid var(--color-border); vertical-align: top; }
-    tbody tr:nth-child(odd) { background: var(--color-bg-row-stripe); }
+    .item { padding: 16px; border-bottom: 1px solid var(--color-border); }
+    .item:nth-child(odd) { background: var(--color-bg-row-stripe); }
+    .head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    .content { margin: 8px 0 4px; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .panel { margin-top: 12px; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-bg-surface); display: grid; gap: 12px; }
+    fieldset.negative { border: 1px solid var(--color-border); border-radius: 4px; padding: 8px 12px; }
+    .radio { margin-right: 16px; }
+    .field { display: grid; gap: 4px; font-size: 0.875rem; }
+    textarea { font: inherit; padding: 8px; border: 1px solid var(--color-border); border-radius: 4px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    button.ok { background: var(--status-ok-line); }
+    button.danger { background: var(--status-danger-line); }
+    button.secondary { background: var(--color-bg-surface); color: var(--color-brand); border: 1px solid var(--color-brand); }
+    button.primary { margin-top: 8px; }
+    button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid var(--status-info); outline-offset: 2px; }
+    .inline-error { color: var(--status-danger-text); margin-top: 8px; font-weight: 600; }
+    #mode { background: var(--status-warn-bg); border: 1px solid var(--status-warn-line); color: var(--status-warn-text); padding: 8px 12px; border-radius: 4px; margin: 0 0 16px; font-size: 0.875rem; }
     .badge {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 2px 10px; border-radius: 999px; border: 1px solid;
@@ -91,11 +98,12 @@
 <body>
   <header>Grade Runway</header>
   <main>
-    <h1>รายการข้อความรอตรวจ</h1>
+    <h1>ตรวจข้อความรออนุมัติ</h1>
     <p class="note">
-      ข้อมูลจาก Firestore (collection <code>chatMessages</code>) โหลดครั้งเดียวตอนเปิดหน้า แก้ข้อมูลใน Console แล้วกด F5 เพื่อดูการเปลี่ยนแปลง<br>
-      ต้องเข้าสู่ระบบด้วยบัญชี Firebase Authentication ที่มีบทบาท lecturer หรือ admin (rules ตรวจจาก <code>users/{uid}</code>)
+      ล็อกข้อความเพื่อตรวจ ระบุเชิงลบ/ไม่เชิงลบ แล้วอนุมัติหรือปฏิเสธ (ปฏิเสธต้องมีเหตุผล) ทุกการกระทำผ่าน Backend และมีบันทึกประวัติ<br>
+      ต้องเข้าสู่ระบบด้วยบัญชีที่มีบทบาท lecturer หรือ admin
     </p>
+    <p id="mode" hidden>โหมด emulator: ข้อมูลและบัญชีทดสอบในเครื่องเท่านั้น ไม่เชื่อมต่อโปรเจกต์จริง</p>
     <div id="who" hidden><span id="whoText"></span><button id="logout" type="button">ออกจากระบบ</button></div>
     <div class="card">
       <form id="login" hidden>
@@ -104,18 +112,7 @@
         <button type="submit">เข้าสู่ระบบ</button>
       </form>
       <div id="message" class="info" role="status">กำลังโหลด…</div>
-      <table id="table" hidden>
-        <thead>
-          <tr>
-            <th scope="col">ผู้ส่ง</th>
-            <th scope="col">ข้อความ</th>
-            <th scope="col">สถานะ</th>
-            <th scope="col">ส่งเมื่อ</th>
-            <th scope="col">ส่งใหม่จาก</th>
-          </tr>
-        </thead>
-        <tbody id="rows"></tbody>
-      </table>
+      <div id="list"></div>
     </div>
   </main>
   <script type="module" src="./app.js"></script>

@@ -3,7 +3,7 @@
   "private": true,
   "description": "Backend Service (Cloud Functions for Firebase + Admin SDK)",
   "main": "index.js",
-  "engines": { "node": ">=20" },
+  "engines": { "node": "22" },
   "scripts": {
     "test": "firebase emulators:exec --only firestore --project demo-grade-runway \"node --test --test-concurrency=1 test/*.test.js\"",
     "emulators": "firebase emulators:start --only functions,firestore --project demo-grade-runway"
