@@ -133,21 +133,28 @@ async function listApprovedMessages(db, auth, data) {
   });
 }
 
-// FR-13: pending messages that nobody currently holds, oldest first. Lock
-// details are never returned.
+// FR-13: pending messages that nobody else currently holds, oldest first. The
+// caller's own live locks are included (flagged lockedByMe, with the expiry) so
+// a reviewer can find them again after a reload. The lock token is never returned.
 async function listReviewQueue(db, auth, _data, { now = new Date() } = {}) {
-  await requireRole(db, auth, REVIEWERS);
+  const ctx = await requireRole(db, auth, REVIEWERS);
   const snap = await messages(db).where("status", "==", "pending").orderBy("sentAt", "asc").get();
   return snap.docs
-    .filter((d) => !isLockLive(d.data().lock, now))
+    .filter((d) => {
+      const lock = d.data().lock;
+      return !isLockLive(lock, now) || lock.holderId === ctx.uid;
+    })
     .map((d) => {
       const m = d.data();
+      const mine = isLockLive(m.lock, now);
       return {
         id: d.id,
         senderName: m.senderName,
         content: m.content,
         sentAt: m.sentAt.toDate().toISOString(),
         resubmitOfId: m.resubmitOfId ?? null,
+        lockedByMe: mine,
+        lockExpiresAt: mine ? m.lock.expiresAt.toDate().toISOString() : null,
       };
     });
 }

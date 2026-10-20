@@ -83,6 +83,14 @@ test("review queue: reviewers only, pending only, locked messages hidden, no loc
   const q = await chat.listReviewQueue(db, R2, {}, { now: at(1) });
   assert.deepEqual(q.map((x) => x.id), [b]);
   assert.equal(JSON.stringify(q).includes("token"), false);
+  // the holder still sees their own locked message, flagged, with the expiry
+  const mine = await chat.listReviewQueue(db, R1, {}, { now: at(1) });
+  assert.equal(mine.length, 2);
+  const locked = mine.find((x) => x.id === a);
+  assert.equal(locked.lockedByMe, true);
+  assert.ok(locked.lockExpiresAt);
+  assert.equal(mine.find((x) => x.id === b).lockedByMe, false);
+  assert.equal(JSON.stringify(mine).includes("token"), false);
   // after the lock expires the message returns to the queue
   assert.equal((await chat.listReviewQueue(db, R2, {}, { now: at(60) })).length, 2);
 });

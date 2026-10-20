@@ -76,5 +76,8 @@
 - เก็บล็อกเป็นฟิลด์ `lock` และคำตัดสินเป็นฟิลด์ `decision` บนเอกสารข้อความ (ไม่แยก subcollection) audit ลง `auditEvents` และแจ้งเตือนลง `notifications`
 - สมมติฐานชั่วคราว: ระยะเวลาล็อกใช้ `systemPolicy/current.lockDurationMinutes` ถ้าไม่ตั้งค่าใช้ 15 นาที และนโยบายแสดงชื่อผู้ส่งใช้ `systemPolicy/current.showSenderName` ถ้าไม่ตั้งค่าซ่อนชื่อ (ผู้ใช้ยังไม่ตัดสิน NFR-06, T-3-15 ยังไม่ทำ รวมถึง audit การเปลี่ยนนโยบาย)
 - ข้อสังเกตด้านความปลอดภัย: rules ปัจจุบันให้ lecturer/admin อ่านเอกสาร `chatMessages` ตรงได้ ซึ่งรวมฟิลด์ `lock.token` ของผู้ตรวจคนอื่น การตัดสินยังต้องตรง `holderId` ด้วย token ที่รั่วจึงใช้ตัดสินแทนไม่ได้ แต่ควรย้ายล็อกออกจากเอกสารที่อ่านตรงได้ก่อนใช้งานจริง
-- ยังไม่ได้ทำ: ปุ่มอนุมัติ/ปฏิเสธ/ล็อกในหน้าเว็บ (ต้องเรียก callable ผ่าน emulator หรือ deploy), นโยบายแสดงชื่อ (T-3-15), index ของ `chatMessages` เพิ่มใน `firestore.indexes.json` แล้วแต่ยังไม่ทดสอบกับ Firestore จริง
+- ปุ่มอนุมัติ/ปฏิเสธ/ล็อก/ปลดล็อกในหน้า `web/review-queue/` เรียก callable ผ่าน emulator ได้แล้ว (ดู README ในโฟลเดอร์นั้น) ทดสอบด้วยมือแล้วกับ Auth + Functions + Firestore emulator ยังไม่ได้ deploy จริง
+- ยังไม่ได้ทำ: นโยบายแสดงชื่อ (T-3-15), index ของ `chatMessages` เพิ่มใน `firestore.indexes.json` แล้วแต่ยังไม่ทดสอบกับ Firestore จริง
+- Functions emulator ต้องการ `engines.node` เป็น 20, 22 หรือ 24 (ตั้ง 22) ค่า `>=20` ใช้ไม่ได้
+- ข้อผิดพลาดที่พบและแก้: `functions/index.js` ใน PR #19 ยังไม่ export callable ของ chat (test เรียก handler ตรง จึงไม่เจอ) พบตอนเปิด Functions emulator แก้แล้ว
 
