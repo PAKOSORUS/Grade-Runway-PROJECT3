@@ -60,3 +60,10 @@
 - ที่ตั้ง: `scripts/seed-firestore/` (`seed.js`, `package.json`)
 - โหมดเริ่มต้นเป็น dry-run ใส่ `--write` เพื่อเขียนเฉพาะเอกสารที่ยังไม่มี และ `--force` เพื่อทับ
 - credentials ผู้ใช้ตั้งเองผ่าน `GOOGLE_APPLICATION_CREDENTIALS` สคริปต์ไม่อ่านหรือเก็บ key และห้ามนำไฟล์ key เข้า repo
+
+## 5. Backend (Cloud Functions) ที่เริ่มทำแล้ว
+
+- ที่ตั้ง: `functions/` (Node.js, `firebase-functions` v2, `firebase-admin`) และ `firebase.json` ที่ราก repo โครงเป็น handler ธรรมดาใน `functions/lib/` ที่ทดสอบกับ Firestore emulator ได้ และ `functions/index.js` ที่ห่อเป็น callable
+- Phase 1 (เฉพาะส่วนที่ทำแล้ว): ตรวจตัวตนและบทบาทจาก `users/{auth uid}` (`lib/access.js`), Admin เพิ่ม/แก้/ปิดบัญชีและบทบาท, เพิ่ม/ถอน/โอนผู้เรียนในความดูแล (`lib/accounts.js`) และบันทึก audit ในธุรกรรมเดียวกันที่ collection `configChangeAudits` (`lib/audit.js` ใช้ซ้ำกับหมวดอื่นได้)
+- ยังไม่ทำ: นำเข้าบัญชีจากระบบเดิม (T-1-02, T-1-04), การจำกัดการอ่านตามผู้เรียน/ครู (T-1-07), หน้า Admin ดูประวัติ (T-1-09), หน้าจอ Admin
+- ทดสอบ: `cd functions && npm test` (Firestore emulator ต้องใช้ Java 21 ขึ้นไป) ผ่าน 11 ข้อ ยังไม่ได้ deploy และไม่ได้ทดสอบกับ Firebase จริง (ต้องใช้แผน Blaze ผู้ใช้เลือกเลื่อนไว้)
