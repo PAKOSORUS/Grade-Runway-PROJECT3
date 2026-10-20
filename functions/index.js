@@ -6,6 +6,7 @@ const { getFirestore } = require("firebase-admin/firestore");
 const accounts = require("./lib/accounts");
 const learners = require("./lib/learners");
 const history = require("./lib/history");
+const chat = require("./lib/chat");
 
 initializeApp();
 const db = getFirestore();
