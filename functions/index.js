@@ -7,6 +7,7 @@ const accounts = require("./lib/accounts");
 const learners = require("./lib/learners");
 const history = require("./lib/history");
 const chat = require("./lib/chat");
+const eligibility = require("./lib/eligibility");
 
 initializeApp();
 const db = getFirestore();
@@ -29,3 +30,6 @@ exports.setUserStatus = wrap(accounts.setUserStatus);
 exports.assignLearner = wrap(accounts.assignLearner);
 exports.unassignLearner = wrap(accounts.unassignLearner);
 exports.transferLearner = wrap(accounts.transferLearner);
+
+exports.setEligibilityCriteria = wrap(eligibility.setEligibilityCriteria);
+exports.getEligibilityCriteria = wrap(eligibility.getEligibilityCriteria);

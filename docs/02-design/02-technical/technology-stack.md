@@ -68,7 +68,7 @@
 - การจำกัดการอ่านตามผู้เรียน/ครู (T-1-07, `lib/learners.js`): ผู้เรียนอ่านเฉพาะของตน ครูอ่านเฉพาะผู้เรียนที่มีความสัมพันธ์ `active` บทบาทอื่นรวมถึง Admin ถูกปฏิเสธ (ตั้งใจเข้มไว้ก่อน ขยายได้ถ้าข้อกำหนดเปลี่ยน) ฟีเจอร์ที่อ่านข้อมูลผู้เรียนใน phase ถัดไปต้องเรียก `requireLearnerAccess`
 - ประวัติการเปลี่ยนแปลงสำหรับ Admin (T-1-09, `lib/history.js`): อ่านอย่างเดียว กรองตาม category/targetId ได้ ต้องมี composite index ตาม `firestore.indexes.json` เมื่อ deploy จริง
 - ยังไม่ทำ: นำเข้าบัญชีจากระบบเดิม (T-1-02, T-1-04, T-1-05), หน้าจอ Admin
-- ทดสอบ: `cd functions && npm test` (Firestore emulator ต้องใช้ Java 21 ขึ้นไป) ผ่าน 41 ข้อ ยังไม่ได้ deploy และไม่ได้ทดสอบกับ Firebase จริง (ต้องใช้แผน Blaze ผู้ใช้เลือกเลื่อนไว้)
+- ทดสอบ: `cd functions && npm test` (Firestore emulator ต้องใช้ Java 21 ขึ้นไป) ผ่าน 47 ข้อ ยังไม่ได้ deploy และไม่ได้ทดสอบกับ Firebase จริง (ต้องใช้แผน Blaze ผู้ใช้เลือกเลื่อนไว้)
 
 ### แชทที่ผ่านการตรวจ (Phase 3, `functions/lib/chat.js`)
 
@@ -80,3 +80,9 @@
 - Functions emulator ต้องการ `engines.node` เป็น 20, 22 หรือ 24 (ตั้ง 22) ค่า `>=20` ใช้ไม่ได้
 - ข้อผิดพลาดที่พบและแก้: `functions/index.js` ใน PR #19 ยังไม่ export callable ของ chat (test เรียก handler ตรง จึงไม่เจอ) พบตอนเปิด Functions emulator แก้แล้ว
 - `functions/test/exports.test.js` ตรวจว่า handler ของ lib/ ที่ client เรียกได้ถูก export ใน `index.js` ครบ (กันบั๊กแบบที่เกิดใน PR #19) ผ่านรวม 41 ข้อ
+
+### เกณฑ์ผู้ผ่านเกณฑ์ (Phase 2 ส่วน T-2-09, `functions/lib/eligibility.js`)
+
+- Admin ตั้งเกณฑ์ผ่าน `setEligibilityCriteria` และอ่านผ่าน `getEligibilityCriteria` เกณฑ์เก็บใน collection `eligibilityCriteria` เป็นเอกสารตามเวอร์ชัน (`criteria-v1`, `criteria-v2` ...) ทุกครั้งที่เปลี่ยนจะสร้างเวอร์ชันใหม่ ตั้งเวอร์ชันเดิม `isCurrent: false` ไม่แก้หรือลบเวอร์ชันเก่า และบันทึก audit (category `eligibilityCriteria` ค่าก่อน-หลัง) ใน transaction เดียวกัน
+- องค์ประกอบของเกณฑ์ spec ยังไม่กำหนด จึงเก็บ `rules` เป็น object ที่ไม่ตีความ (จำกัดขนาด 20 KB) ตัวประเมินผลในอนาคตจะกำหนดรูปแบบที่แน่นอน
+- ยังไม่ทำ: การประเมินนักศึกษาแต่ละคนกับเกณฑ์และเขียน `eligibilityResults/{uid}` (T-2-10, T-2-11) ซึ่งต้องรู้องค์ประกอบของเกณฑ์และมีข้อมูลซิงก์ ดังนั้นผู้ส่งข้อความยังต้องมีผลที่สร้างด้วยมือ
