@@ -5,8 +5,12 @@
 // Data model (collection chatMessages, same fields as the seed data):
 //   senderId, senderName, content, status (pending|approved|rejected),
 //   sentAt, resubmitOfId, criteriaId
-//   lock     { holderId, token, expiresAt }   present only while locked
+//   (the review lock is NOT stored here: see reviewLocks below)
 //   decision { reviewerId, outcome, negative, reason, at }   set once
+// Collection reviewLocks/{messageId}: { holderId, token, expiresAt }, present only
+// while locked. Kept apart from chatMessages because reviewers may read
+// chatMessages directly under the Firestore rules, and the token must not be
+// visible to other reviewers. reviewLocks is denied to every client.
 const { randomUUID } = require("node:crypto");
 const { FieldValue, Timestamp } = require("firebase-admin/firestore");
 const { requireRole } = require("./access");
@@ -19,6 +23,7 @@ const MAX_CONTENT = 2000;
 const DEFAULT_LOCK_MINUTES = 15;
 
 const messages = (db) => db.collection("chatMessages");
+const locks = (db) => db.collection("reviewLocks");
 
 function cleanContent(content) {
   if (typeof content !== "string" || !content.trim()) throw invalid("ต้องระบุข้อความ");
@@ -47,6 +52,7 @@ async function lockMinutes(db) {
   return Number.isFinite(v) && v > 0 ? v : DEFAULT_LOCK_MINUTES;
 }
 
+// lock is the data of a reviewLocks document (or null).
 const isLockLive = (lock, now) => !!lock && lock.expiresAt.toMillis() > now.getTime();
 
 // FR-16, FR-27: the sender must currently be eligible. The result is the stored
@@ -138,23 +144,25 @@ async function listApprovedMessages(db, auth, data) {
 // a reviewer can find them again after a reload. The lock token is never returned.
 async function listReviewQueue(db, auth, _data, { now = new Date() } = {}) {
   const ctx = await requireRole(db, auth, REVIEWERS);
-  const snap = await messages(db).where("status", "==", "pending").orderBy("sentAt", "asc").get();
+  const [snap, lockSnap] = await Promise.all([
+    messages(db).where("status", "==", "pending").orderBy("sentAt", "asc").get(),
+    locks(db).get(),
+  ]);
+  const live = new Map();
+  for (const l of lockSnap.docs) if (isLockLive(l.data(), now)) live.set(l.id, l.data());
   return snap.docs
-    .filter((d) => {
-      const lock = d.data().lock;
-      return !isLockLive(lock, now) || lock.holderId === ctx.uid;
-    })
+    .filter((d) => !live.has(d.id) || live.get(d.id).holderId === ctx.uid)
     .map((d) => {
       const m = d.data();
-      const mine = isLockLive(m.lock, now);
+      const mine = live.get(d.id);
       return {
         id: d.id,
         senderName: m.senderName,
         content: m.content,
         sentAt: m.sentAt.toDate().toISOString(),
         resubmitOfId: m.resubmitOfId ?? null,
-        lockedByMe: mine,
-        lockExpiresAt: mine ? m.lock.expiresAt.toDate().toISOString() : null,
+        lockedByMe: !!mine,
+        lockExpiresAt: mine ? mine.expiresAt.toDate().toISOString() : null,
       };
     });
 }
@@ -167,15 +175,17 @@ async function lockMessage(db, auth, data, { now = new Date() } = {}) {
   if (!messageId) throw invalid("ต้องระบุ messageId");
   const minutes = await lockMinutes(db);
   const ref = messages(db).doc(messageId);
+  const lockRef = locks(db).doc(messageId);
   const token = randomUUID();
   const expiresAt = Timestamp.fromMillis(now.getTime() + minutes * 60_000);
   await db.runTransaction(async (tx) => {
-    const snap = await tx.get(ref);
+    const [snap, cur] = await Promise.all([tx.get(ref), tx.get(lockRef)]);
     if (!snap.exists) throw missing("ไม่พบข้อความ");
-    const m = snap.data();
-    if (m.status !== "pending") throw conflict("ข้อความนี้ไม่ได้อยู่ในสถานะรออนุมัติ");
-    if (isLockLive(m.lock, now) && m.lock.holderId !== ctx.uid) throw conflict("ข้อความนี้ถูกผู้ตรวจคนอื่นล็อกอยู่");
-    tx.update(ref, { lock: { holderId: ctx.uid, token, expiresAt } });
+    if (snap.data().status !== "pending") throw conflict("ข้อความนี้ไม่ได้อยู่ในสถานะรออนุมัติ");
+    if (cur.exists && isLockLive(cur.data(), now) && cur.data().holderId !== ctx.uid) {
+      throw conflict("ข้อความนี้ถูกผู้ตรวจคนอื่นล็อกอยู่");
+    }
+    tx.set(lockRef, { holderId: ctx.uid, token, expiresAt });
     auditEvent(db, tx, { type: "lock", messageId, actorId: ctx.uid });
   });
   return { messageId, token, expiresAt: expiresAt.toDate().toISOString() };
@@ -195,11 +205,12 @@ async function decideMessage(db, auth, data, { now = new Date() } = {}) {
   if (typeof data?.token !== "string" || !data.token) throw invalid("ต้องแนบ token ของล็อก");
 
   const ref = messages(db).doc(messageId);
+  const lockRef = locks(db).doc(messageId);
   const result = await db.runTransaction(async (tx) => {
-    const snap = await tx.get(ref);
+    const [snap, lockSnap] = await Promise.all([tx.get(ref), tx.get(lockRef)]);
     if (!snap.exists) throw missing("ไม่พบข้อความ");
     const m = snap.data();
-    const lock = m.lock;
+    const lock = lockSnap.exists ? lockSnap.data() : null;
     const valid = m.status === "pending" && isLockLive(lock, now) && lock.holderId === ctx.uid && lock.token === data.token;
     if (!valid) {
       auditEvent(db, tx, { type: "decision_rejected", messageId, actorId: ctx.uid });
@@ -209,7 +220,6 @@ async function decideMessage(db, auth, data, { now = new Date() } = {}) {
     const status = data.outcome === "approve" ? "approved" : "rejected";
     tx.update(ref, {
       status,
-      lock: FieldValue.delete(),
       decision: {
         reviewerId: ctx.uid,
         outcome: data.outcome,
@@ -218,6 +228,7 @@ async function decideMessage(db, auth, data, { now = new Date() } = {}) {
         at: FieldValue.serverTimestamp(),
       },
     });
+    tx.delete(lockRef);
     auditEvent(db, tx, {
       type: "review_decision",
       messageId,
@@ -242,11 +253,12 @@ async function releaseLock(db, auth, data) {
   const messageId = typeof data?.messageId === "string" ? data.messageId.trim() : "";
   if (!messageId) throw invalid("ต้องระบุ messageId");
   const ref = messages(db).doc(messageId);
+  const lockRef = locks(db).doc(messageId);
   await db.runTransaction(async (tx) => {
-    const snap = await tx.get(ref);
+    const [snap, lockSnap] = await Promise.all([tx.get(ref), tx.get(lockRef)]);
     if (!snap.exists) throw missing("ไม่พบข้อความ");
-    if (!snap.data().lock) throw conflict("ข้อความนี้ไม่ได้ถูกล็อก");
-    tx.update(ref, { lock: FieldValue.delete() });
+    if (!lockSnap.exists) throw conflict("ข้อความนี้ไม่ได้ถูกล็อก");
+    tx.delete(lockRef);
     auditEvent(db, tx, { type: "unlock_manual", messageId, actorId: ctx.uid });
   });
   return { messageId };
@@ -256,13 +268,13 @@ async function releaseLock(db, auth, data) {
 // until then expired locks are already treated as free by the queue and the lock
 // and decision checks, so this only tidies data and records the audit.
 async function releaseExpiredLocks(db, { now = new Date() } = {}) {
-  const snap = await messages(db).where("status", "==", "pending").get();
-  const expired = snap.docs.filter((d) => d.data().lock && !isLockLive(d.data().lock, now));
+  const snap = await locks(db).get();
+  const expired = snap.docs.filter((d) => !isLockLive(d.data(), now));
   for (const d of expired) {
     await db.runTransaction(async (tx) => {
       const cur = await tx.get(d.ref);
-      if (!cur.exists || !cur.data().lock || isLockLive(cur.data().lock, now)) return;
-      tx.update(d.ref, { lock: FieldValue.delete() });
+      if (!cur.exists || isLockLive(cur.data(), now)) return;
+      tx.delete(d.ref);
       auditEvent(db, tx, { type: "unlock_expired", messageId: d.id, actorId: "system" });
     });
   }

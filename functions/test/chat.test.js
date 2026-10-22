@@ -22,7 +22,7 @@ async function clear(name) {
 }
 
 async function reset() {
-  for (const c of ["users", "chatMessages", "auditEvents", "notifications", "eligibilityResults", "systemPolicy"]) await clear(c);
+  for (const c of ["users", "chatMessages", "reviewLocks", "auditEvents", "notifications", "eligibilityResults", "systemPolicy"]) await clear(c);
   const users = {
     "stu-1": { name: "Student 1", status: "active", roles: ["student"] },
     "stu-2": { name: "Student 2", status: "active", roles: ["student"] },
@@ -35,6 +35,7 @@ async function reset() {
 }
 
 const msg = async (id) => (await db.collection("chatMessages").doc(id).get()).data();
+const lockOf = async (id) => (await db.collection("reviewLocks").doc(id).get()).data();
 const events = async (type) =>
   (await db.collection("auditEvents").get()).docs.map((d) => d.data()).filter((e) => !type || e.type === type);
 const notes = async () => (await db.collection("notifications").get()).docs.map((d) => d.data());
@@ -120,7 +121,8 @@ test("approve and reject need the right fields; reject needs a reason; negative 
   const m = await msg(id);
   assert.equal(m.status, "approved");
   assert.equal(m.decision.negative, true);
-  assert.equal(m.lock, undefined);
+  assert.equal(await lockOf(id), undefined);
+  assert.equal("lock" in m, false);
 });
 
 test("rejection stores reason, audits, and notifies the sender with the reason", async () => {
@@ -194,8 +196,8 @@ test("expired locks are swept and audited; live locks are kept", async () => {
   await chat.lockMessage(db, R1, { messageId: b }, { now: at(50) });
   const r = await chat.releaseExpiredLocks(db, { now: at(60) });
   assert.equal(r.released, 1);
-  assert.equal((await msg(a)).lock, undefined);
-  assert.ok((await msg(b)).lock);
+  assert.equal(await lockOf(a), undefined);
+  assert.ok(await lockOf(b));
   assert.equal((await events("unlock_expired")).length, 1);
 });
 
@@ -260,8 +262,10 @@ test("a sender who lost eligibility after sending still has the message reviewed
   assert.equal((await msg(id)).status, "approved");
 });
 
-test("Timestamp sanity: lock expiry is stored as a Timestamp", async () => {
+test("lock lives in reviewLocks (Timestamp expiry), never on the chatMessages document", async () => {
   const id = await sent();
   await chat.lockMessage(db, R1, { messageId: id }, { now: at(0) });
-  assert.ok((await msg(id)).lock.expiresAt instanceof Timestamp);
+  assert.ok((await lockOf(id)).expiresAt instanceof Timestamp);
+  // the token must never be on the message document that reviewers can read directly
+  assert.equal(JSON.stringify(await msg(id)).includes("token"), false);
 });
