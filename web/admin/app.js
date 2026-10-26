@@ -1,0 +1,238 @@
+// Admin screen (prototype): system policy, accounts, advisor-learner links and
+// the change history. Everything goes through the Backend callables
+// (functions/lib/policy.js, accounts.js, history.js); the page never touches
+// Firestore. Values from the Backend are only ever set with textContent.
+//
+// Modes:
+//   default    real project: needs deployed functions and ../review-queue/firebase-config.js
+//   #emulator  local Auth + Functions emulators (http://localhost:3000/admin/#emulator
+//              when served with `npx serve web`)
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth,
+  connectAuthEmulator,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFunctions,
+  connectFunctionsEmulator,
+  httpsCallable,
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
+
+const $ = (id) => document.getElementById(id);
+const useEmulator =
+  new URLSearchParams(location.search).get("emulator") === "1" || location.hash === "#emulator";
+const call = {};
+
+function showMessage(text, kind) {
+  $("message").textContent = text;
+  $("message").className = kind;
+  $("message").hidden = !text;
+}
+
+function setStatus(id, text, kind) {
+  const e = $(id);
+  e.textContent = text;
+  e.className = `status ${kind ?? ""}`;
+}
+
+const errorText = (err) => (err && err.message) || String(err);
+
+function formatTime(iso) {
+  if (!iso) return "-";
+  return new Date(iso).toLocaleString("th-TH", { timeZone: "Asia/Bangkok", dateStyle: "medium", timeStyle: "medium" });
+}
+
+async function attempt(statusId, action, okText) {
+  setStatus(statusId, "กำลังบันทึก…", "");
+  try {
+    await action();
+    setStatus(statusId, okText, "ok");
+    return true;
+  } catch (err) {
+    console.error(err);
+    setStatus(statusId, errorText(err), "error");
+    return false;
+  }
+}
+
+// ---- policy ----
+const numOrNull = (v) => (v.trim() === "" ? null : Number(v));
+
+function fillPolicy(p) {
+  $("showSenderName").value = String(p.showSenderName);
+  $("lockDurationMinutes").value = p.lockDurationMinutes ?? "";
+  $("syncIntervalMinutes").value = p.syncIntervalMinutes ?? "";
+  $("maxMissingImportPercent").value = p.maxMissingImportPercent ?? "";
+  $("policyMeta").textContent = p.updatedAt
+    ? `แก้ไขล่าสุดโดย ${p.updatedBy} เมื่อ ${formatTime(p.updatedAt)}`
+    : "ยังไม่เคยตั้งค่า (ซ่อนชื่อผู้ส่งเป็นค่าเริ่มต้นชั่วคราว)";
+}
+
+async function loadPolicy() {
+  fillPolicy((await call.getSystemPolicy({})).data);
+}
+
+function policyPatch() {
+  // Only values the Admin filled in are sent; an empty box means "leave as is".
+  const patch = { showSenderName: $("showSenderName").value === "true" };
+  for (const id of ["lockDurationMinutes", "syncIntervalMinutes", "maxMissingImportPercent"]) {
+    const v = numOrNull($(id).value);
+    if (v !== null) patch[id] = v;
+  }
+  return patch;
+}
+
+// ---- accounts ----
+function userPatch() {
+  const patch = { uid: $("uUid").value.trim() };
+  if ($("uName").value.trim()) patch.name = $("uName").value.trim();
+  if ($("uEmail").value.trim()) patch.email = $("uEmail").value.trim();
+  if ($("uStatus").value) patch.status = $("uStatus").value;
+  const roles = [...document.querySelectorAll('input[name="uRole"]:checked')].map((c) => c.value);
+  if (roles.length) patch.roles = roles;
+  return patch;
+}
+
+// ---- assignments ----
+function assignAction(op) {
+  const learnerId = $("aLearner").value.trim();
+  const advisorId = $("aAdvisor").value.trim();
+  const to = $("aTo").value.trim();
+  if (!learnerId || !advisorId) throw new Error("ต้องระบุ uid ผู้เรียนและ uid ครู");
+  if (op === "assign") return call.assignLearner({ learnerId, advisorId });
+  if (op === "unassign") return call.unassignLearner({ learnerId, advisorId });
+  if (!to) throw new Error("การโอนต้องระบุ uid ครูปลายทาง");
+  return call.transferLearner({ learnerId, fromAdvisorId: advisorId, toAdvisorId: to });
+}
+
+// ---- history ----
+const compact = (v) => (v === null || v === undefined ? "-" : JSON.stringify(v));
+
+async function loadHistory() {
+  setStatus("historyStatus", "", "");
+  const data = { limit: 50 };
+  if ($("hCategory").value) data.category = $("hCategory").value;
+  try {
+    const rows = (await call.listChangeAudits(data)).data;
+    const body = $("historyBody");
+    body.replaceChildren();
+    for (const r of rows) {
+      const tr = document.createElement("tr");
+      for (const text of [formatTime(r.at), r.category, r.action, r.targetId, r.actorId]) {
+        const td = document.createElement("td");
+        td.textContent = text;
+        tr.appendChild(td);
+      }
+      const td = document.createElement("td");
+      const pre = document.createElement("pre");
+      pre.textContent = `${compact(r.before)}\n→ ${compact(r.after)}`;
+      td.appendChild(pre);
+      tr.appendChild(td);
+      body.appendChild(tr);
+    }
+    if (rows.length === 0) setStatus("historyStatus", "ยังไม่มีประวัติ", "");
+  } catch (err) {
+    console.error(err);
+    setStatus("historyStatus", errorText(err), "error");
+  }
+}
+
+async function loadAll() {
+  showMessage("กำลังโหลด…", "info");
+  try {
+    await loadPolicy();
+  } catch (err) {
+    console.error(err);
+    $("app").hidden = true;
+    showMessage(
+      err && err.code === "functions/permission-denied"
+        ? "ไม่มีสิทธิ์: บัญชีนี้ต้องมีเอกสาร users/{uid} ที่ status เป็น active และมีบทบาท admin"
+        : `โหลดข้อมูลไม่สำเร็จ: ${errorText(err)}`,
+      "error"
+    );
+    return;
+  }
+  showMessage("", "info");
+  $("app").hidden = false;
+  await loadHistory();
+}
+
+async function main() {
+  let config;
+  if (useEmulator) {
+    config = { apiKey: "demo-key", projectId: "demo-grade-runway", appId: "demo" };
+  } else {
+    try {
+      ({ firebaseConfig: config } = await import("../review-queue/firebase-config.js"));
+    } catch {
+      showMessage(
+        "ไม่พบ web/review-queue/firebase-config.js — ทำตาม README ของ review-queue (หรือเปิดด้วย #emulator เพื่อใช้ emulator)",
+        "error"
+      );
+      return;
+    }
+  }
+  const app = initializeApp(config);
+  const auth = getAuth(app);
+  const functions = getFunctions(app);
+  if (useEmulator) {
+    connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
+    connectFunctionsEmulator(functions, "127.0.0.1", 5001);
+    $("mode").hidden = false;
+  }
+  for (const name of [
+    "getSystemPolicy", "setSystemPolicy", "upsertUser", "assignLearner",
+    "unassignLearner", "transferLearner", "listChangeAudits",
+  ]) call[name] = httpsCallable(functions, name);
+
+  $("login").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      await signInWithEmailAndPassword(auth, $("email").value, $("password").value);
+    } catch (err) {
+      showMessage("เข้าสู่ระบบไม่สำเร็จ ตรวจอีเมลและรหัสผ่าน", "error");
+      console.error(err && err.code);
+    }
+  });
+  $("logout").addEventListener("click", () => signOut(auth));
+
+  $("policyForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const ok = await attempt("policyStatus", async () => fillPolicy((await call.setSystemPolicy(policyPatch())).data), "บันทึกนโยบายแล้ว");
+    if (ok) await loadHistory();
+  });
+  $("userForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const ok = await attempt("userStatus", () => call.upsertUser(userPatch()), "บันทึกบัญชีแล้ว");
+    if (ok) await loadHistory();
+  });
+  for (const b of document.querySelectorAll("#assignForm button[data-op]")) {
+    b.addEventListener("click", async () => {
+      const ok = await attempt("assignStatus", async () => assignAction(b.dataset.op), "ดำเนินการแล้ว");
+      if (ok) await loadHistory();
+    });
+  }
+  $("hReload").addEventListener("click", loadHistory);
+  $("hCategory").addEventListener("change", loadHistory);
+
+  onAuthStateChanged(auth, (user) => {
+    $("password").value = "";
+    $("app").hidden = true;
+    if (!user) {
+      $("loginCard").hidden = false;
+      $("who").hidden = true;
+      showMessage("กรุณาเข้าสู่ระบบ", "info");
+      return;
+    }
+    $("loginCard").hidden = true;
+    $("who").hidden = false;
+    $("whoText").textContent = user.email ?? user.uid;
+    loadAll();
+  });
+}
+
+main();

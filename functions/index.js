@@ -7,6 +7,7 @@ const accounts = require("./lib/accounts");
 const learners = require("./lib/learners");
 const history = require("./lib/history");
 const chat = require("./lib/chat");
+const policy = require("./lib/policy");
 
 initializeApp();
 const db = getFirestore();
@@ -16,7 +17,9 @@ const wrap = (handler) => onCall((request) => handler(db, request.auth, request.
 exports.getLearnerProfile = wrap(learners.getLearnerProfile);
 exports.listMyLearners = wrap(learners.listMyLearners);
 exports.listChangeAudits = wrap(history.listChangeAudits);
-exports.sendMessage = wrap(chat.sendMessage);
+exports.getSystemPolicy = wrap(policy.getSystemPolicy);
+exports.setSystemPolicy = wrap(policy.setSystemPolicy);
+exports.sendMessage =wrap(chat.sendMessage);
 exports.resubmitMessage = wrap(chat.resubmitMessage);
 exports.listApprovedMessages = wrap(chat.listApprovedMessages);
 exports.listReviewQueue = wrap(chat.listReviewQueue);
