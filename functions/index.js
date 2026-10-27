@@ -12,6 +12,7 @@ const thresholds = require("./lib/thresholds");
 const risk = require("./lib/risk");
 const situation = require("./lib/situation");
 const sync = require("./lib/sync");
+const register = require("./lib/register");
 
 initializeApp();
 const db = getFirestore();
@@ -39,6 +40,8 @@ exports.lockMessage = wrap(chat.lockMessage);
 exports.decideMessage = wrap(chat.decideMessage);
 exports.releaseLock = wrap(chat.releaseLock);
 // releaseExpiredLocks is internal; a scheduler will call it in phase 5.
+exports.registerSelf = wrap(register.registerSelf);
+exports.getMyProfile = wrap(register.getMyProfile);
 exports.upsertUser = wrap(accounts.upsertUser);
 exports.setUserStatus = wrap(accounts.setUserStatus);
 exports.assignLearner = wrap(accounts.assignLearner);
