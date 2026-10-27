@@ -47,6 +47,14 @@
       ]
     },
     {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "roles", "arrayConfig": "CONTAINS" }
+      ]
+    },
+    {
       "collectionGroup": "riskAssessments",
       "queryScope": "COLLECTION",
       "fields": [

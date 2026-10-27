@@ -58,6 +58,7 @@
       #thresholdTable td[data-label]::before { content: attr(data-label) ": "; color: var(--color-text-muted); font-size: 0.8125rem; }
       #thresholdTable input { width: 100%; }
     }
+    textarea { width: 100%; }
     pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 0.8125rem; }
     .muted { color: var(--color-text-muted); }
     #mode { background: var(--status-warn-bg); border: 1px solid var(--status-warn-line); color: var(--status-warn-text); padding: 8px 12px; border-radius: 4px; margin: 0 0 16px; font-size: 0.875rem; }
@@ -135,6 +136,28 @@
           </div>
           <div class="status" id="thresholdStatus" role="alert"></div>
         </form>
+      </section>
+
+      <section class="card" aria-labelledby="h-import">
+        <h2 id="h-import">นำเข้าข้อมูลการเรียน</h2>
+        <p class="note">
+          รูปแบบกลางที่ไม่ผูกกับระบบเดิม (JSON): <code>grades</code>, <code>attendance</code>, <code>assignments</code> ครบทั้งสามรายการ
+          ตัวอย่างอยู่ที่ <code>functions/scripts/sample-learning-data.json</code> ถ้าข้อมูลไม่ครบหรือผิดรูปแบบ รอบนี้ล้มเหลว
+          ข้อมูลเดิมไม่ถูกแตะ และ Admin ทุกคนได้รับแจ้ง ถ้าสำเร็จ ข้อมูลชุดใหม่แทนที่ชุดเดิมทั้งหมดแล้วประเมินความเสี่ยงต่อทันที
+        </p>
+        <form id="importForm">
+          <label class="field">เลือกไฟล์ JSON <input id="importFile" type="file" accept=".json,application/json"></label>
+          <label class="field" style="margin-top:8px">หรือวาง JSON ที่นี่
+            <textarea id="importText" rows="6" spellcheck="false" style="font-family:monospace;font-size:0.8125rem;padding:8px;border:1px solid var(--color-border);border-radius:4px"></textarea>
+          </label>
+          <div class="actions"><button type="submit">นำเข้าและประเมินความเสี่ยง</button></div>
+          <div class="status" id="importStatus" role="alert"></div>
+        </form>
+        <h2 style="margin-top:16px;font-size:1rem">รอบซิงก์ล่าสุด</h2>
+        <table id="runTable">
+          <thead><tr><th>เริ่มเมื่อ</th><th>ผล</th><th>รายละเอียด</th></tr></thead>
+          <tbody id="runBody"></tbody>
+        </table>
       </section>
 
       <section class="card" aria-labelledby="h-user">
