@@ -67,19 +67,22 @@
 - Phase 1 (เฉพาะส่วนที่ทำแล้ว): ตรวจตัวตนและบทบาทจาก `users/{auth uid}` (`lib/access.js`), Admin เพิ่ม/แก้/ปิดบัญชีและบทบาท, เพิ่ม/ถอน/โอนผู้เรียนในความดูแล (`lib/accounts.js`) และบันทึก audit ในธุรกรรมเดียวกันที่ collection `configChangeAudits` (`lib/audit.js` ใช้ซ้ำกับหมวดอื่นได้)
 - การจำกัดการอ่านตามผู้เรียน/ครู (T-1-07, `lib/learners.js`): ผู้เรียนอ่านเฉพาะของตน ครูอ่านเฉพาะผู้เรียนที่มีความสัมพันธ์ `active` บทบาทอื่นรวมถึง Admin ถูกปฏิเสธ (ตั้งใจเข้มไว้ก่อน ขยายได้ถ้าข้อกำหนดเปลี่ยน) ฟีเจอร์ที่อ่านข้อมูลผู้เรียนใน phase ถัดไปต้องเรียก `requireLearnerAccess`
 - ประวัติการเปลี่ยนแปลงสำหรับ Admin (T-1-09, `lib/history.js`): อ่านอย่างเดียว กรองตาม category/targetId ได้ ต้องมี composite index ตาม `firestore.indexes.json` เมื่อ deploy จริง
-- ยังไม่ทำ: นำเข้าบัญชีจากระบบเดิม (T-1-02, T-1-04, T-1-05), หน้าจอ Admin
-- ทดสอบ: `cd functions && npm test` (Firestore emulator ต้องใช้ Java 21 ขึ้นไป) ผ่าน 47 ข้อ ยังไม่ได้ deploy และไม่ได้ทดสอบกับ Firebase จริง (ต้องใช้แผน Blaze ผู้ใช้เลือกเลื่อนไว้)
+- นโยบายระบบ (OP-02, OP-43, `lib/policy.js`): Admin อ่าน/ตั้งค่า `systemPolicy/current` (ความถี่ซิงก์ ระยะเวลาล็อก แสดงชื่อผู้ส่ง เกณฑ์สัดส่วนรายการนำเข้าที่หาย) บันทึก audit หมวด `systemPolicy` เฉพาะ field ที่เปลี่ยนจริง ไม่บันทึกถ้าไม่มีอะไรเปลี่ยน
+- หน้าจอ Admin: `web/admin/` (นโยบาย บัญชี ความสัมพันธ์ครู-ผู้เรียน ประวัติการเปลี่ยนแปลง) เรียก callable อย่างเดียว ใช้ emulator ผ่าน `#emulator` ตามหน้า review-queue
+- ยังไม่ทำ: นำเข้าบัญชีจากระบบเดิม (T-1-02, T-1-04, T-1-05)
+- ทดสอบ: `cd functions && npm test` (Firestore emulator ต้องใช้ Java 21 ขึ้นไป) ผ่าน 58 ข้อ (รวมเทสต์ Firestore rules ด้วย `@firebase/rules-unit-testing`) ยังไม่ได้ deploy และไม่ได้ทดสอบกับ Firebase จริง (ต้องใช้แผน Blaze ผู้ใช้เลือกเลื่อนไว้)
 
 ### แชทที่ผ่านการตรวจ (Phase 3, `functions/lib/chat.js`)
 
 - ครอบคลุมในโค้ด: ส่งข้อความ (ตรวจผลผ่านเกณฑ์ที่เก็บไว้ที่ `eligibilityResults/{uid}.eligible`), ส่งใหม่หลังถูกปฏิเสธครั้งละหนึ่ง, ห้องรวมคืนเฉพาะข้อความอนุมัติแล้ว, คิวผู้ตรวจ, ล็อก (token), ตัดสินพร้อม audit ใน transaction เดียว, คำตัดสินที่ไม่ถือล็อกที่ใช้ได้ถูกปฏิเสธ (บันทึก audit และแจ้งผู้ตรวจ ข้อความคงรออนุมัติ), ปลดล็อกด้วยมือ, ฟังก์ชันกวาดล็อกที่หมดเวลา (`releaseExpiredLocks` ยังไม่ผูกกับตัวตั้งเวลา)
 - เก็บคำตัดสินเป็นฟิลด์ `decision` บนเอกสารข้อความ ส่วนล็อก (holderId, token, expiresAt) เก็บใน collection `reviewLocks/{messageId}` แยกออกมา เพราะ rules ให้ผู้ตรวจอ่าน `chatMessages` ตรงได้ token จึงต้องไม่อยู่ในเอกสารนั้น (`reviewLocks` ปฏิเสธ client ทุกคน) audit ลง `auditEvents` และแจ้งเตือนลง `notifications`
-- สมมติฐานชั่วคราว: ระยะเวลาล็อกใช้ `systemPolicy/current.lockDurationMinutes` ถ้าไม่ตั้งค่าใช้ 15 นาที และนโยบายแสดงชื่อผู้ส่งใช้ `systemPolicy/current.showSenderName` ถ้าไม่ตั้งค่าซ่อนชื่อ (ผู้ใช้ยังไม่ตัดสิน NFR-06, T-3-15 ยังไม่ทำ รวมถึง audit การเปลี่ยนนโยบาย)
+- ระยะเวลาล็อกใช้ `systemPolicy/current.lockDurationMinutes` ถ้าไม่ตั้งค่าใช้ 15 นาที และนโยบายแสดงชื่อผู้ส่งใช้ `systemPolicy/current.showSenderName` ถ้าไม่ตั้งค่าซ่อนชื่อ (ค่าเริ่มต้นชั่วคราวรอผู้ใช้ยืนยัน NFR-06, FR-21) ตั้งค่าได้ผ่าน `setSystemPolicy` (T-3-15 ทำแล้ว) พร้อม audit
 - ปุ่มอนุมัติ/ปฏิเสธ/ล็อก/ปลดล็อกในหน้า `web/review-queue/` เรียก callable ผ่าน emulator ได้แล้ว (ดู README ในโฟลเดอร์นั้น) ทดสอบด้วยมือแล้วกับ Auth + Functions + Firestore emulator ยังไม่ได้ deploy จริง
-- ยังไม่ได้ทำ: นโยบายแสดงชื่อ (T-3-15), index ของ `chatMessages` เพิ่มใน `firestore.indexes.json` แล้วแต่ยังไม่ทดสอบกับ Firestore จริง
+- index ของ `chatMessages` เพิ่มใน `firestore.indexes.json` แล้วแต่ยังไม่ทดสอบกับ Firestore จริง
 - Functions emulator ต้องการ `engines.node` เป็น 20, 22 หรือ 24 (ตั้ง 22) ค่า `>=20` ใช้ไม่ได้
 - ข้อผิดพลาดที่พบและแก้: `functions/index.js` ใน PR #19 ยังไม่ export callable ของ chat (test เรียก handler ตรง จึงไม่เจอ) พบตอนเปิด Functions emulator แก้แล้ว
-- `functions/test/exports.test.js` ตรวจว่า handler ของ lib/ ที่ client เรียกได้ถูก export ใน `index.js` ครบ (กันบั๊กแบบที่เกิดใน PR #19) ผ่านรวม 41 ข้อ
+- `functions/test/exports.test.js` ตรวจว่า handler ของ lib/ ที่ client เรียกได้ถูก export ใน `index.js` ครบ (กันบั๊กแบบที่เกิดใน PR #19) ผ่านรวม 58 ข้อ
+- ย้ายล็อกเดิม: `functions/scripts/migrate-locks.js` (dry run เป็นค่าเริ่มต้น ใช้ `--apply` เพื่อเขียน) ย้ายฟิลด์ `lock` บน `chatMessages` ไป `reviewLocks` ทดสอบแล้วใน `test/migrate-locks.test.js` ยังไม่มีข้อมูลจริงให้ย้าย
 
 ### เกณฑ์ผู้ผ่านเกณฑ์ (Phase 2 ส่วน T-2-09, `functions/lib/eligibility.js`)
 
