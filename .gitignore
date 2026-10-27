@@ -3,3 +3,12 @@ node_modules/
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
+
+# secrets / local config
+.env
+.env.*
+functions/.env
+*serviceAccount*.json
+*-key.json
+.firebase/
+web/review-queue/firebase-config.js

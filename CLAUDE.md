@@ -1,14 +1,87 @@
 # CLAUDE.md
 
-ไฟล์นี้ให้คำแนะนำแก่ Claude Code (claude.ai/code) เมื่อทำงานกับโค้ดในโปรเจกต์นี้
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## สถานะของโปรเจกต์
 
-โปรเจกต์นี้**ยังไม่มีซอร์สโค้ด** — เป็นพื้นที่ทำงานด้าน requirements/design สำหรับระบบจัดการงานภายในโครงการที่ยังไม่ได้เริ่มพัฒนาจริง จึงยังไม่มีคำสั่ง build, lint หรือ test ให้รัน งานทั้งหมดที่มีอยู่ตอนนี้อยู่ภายใต้โฟลเดอร์ `docs/` ความคืบหน้าของแต่ละขั้นตอน (requirements/design/testing) ไม่เท่ากัน — บางไฟล์มีเนื้อหาแล้ว บางไฟล์/โฟลเดอร์ยังว่างรอเนื้อหาอยู่ ให้ตรวจสถานะจริงของแต่ละไฟล์ก่อนอ้างอิงหรือแก้ไข อย่าเชื่อคำอธิบายสถานะที่เขียนไว้ในเอกสารฉบับเก่า **อย่าสมมติ** ว่ามี tech stack, framework หรือขั้นตอน build อยู่แล้ว จนกว่าจะปรากฏจริงในโปรเจกต์ (`docs/02-design/02-technical/technology-stack.md` คือจุดที่จะกำหนดเรื่องนี้เมื่อมีการตัดสินใจแล้ว)
+โปรเจกต์นี้เริ่มมีซอร์สโค้ดแล้ว (backend ที่ `functions/`, หน้าเว็บ prototype ที่ `web/`, สคริปต์ที่ `scripts/` และ `firebase/`) ควบคู่กับพื้นที่เอกสาร requirements/design ใน `docs/` ความคืบหน้าของแต่ละส่วนไม่เท่ากัน ให้ตรวจสถานะจริงของแต่ละไฟล์ก่อนอ้างอิงหรือแก้ไข อย่าเชื่อคำอธิบายสถานะที่เขียนไว้ในเอกสารฉบับเก่า เอกสารชั้น logical (`architecture.md`, `api-spec.md`, `db-spec.md`) ยังตั้งใจเขียนแบบไม่ผูก tech stack ส่วนการตัดสินใจเรื่อง technology และ mapping ไปยัง Firestore อยู่ที่ `docs/02-design/02-technical/technology-stack.md` (ที่เดียว) **ยังไม่ได้ deploy ขึ้น Firebase จริง** ทุกอย่างทดสอบกับ emulator
+
+## คำสั่งที่ใช้บ่อย
+
+Backend (รันใน `functions/`, ต้องมี Java 21 ขึ้นไปสำหรับ Firestore emulator และ Node 22):
+
+```bash
+cd functions && npm install
+npm test                                                    # เปิด Firestore emulator แล้วรันทุกเทสต์
+firebase emulators:exec --only firestore --project demo-grade-runway "node --test --test-concurrency=1 test/chat.test.js"   # รันไฟล์เดียว (ต้องผ่าน emulators:exec เพราะเทสต์ใช้ Firestore emulator)
+npm run emulators                                           # เปิด emulator functions+firestore สำหรับลองมือ
+```
+
+ไม่มี lint/build step หน้าเว็บ (`web/admin`, `web/review-queue`, `web/dashboard`) เป็น HTML + ES module ล้วน ไม่มี bundler ทดสอบมือกับ emulator ตามขั้นตอนใน `web/review-queue/README.md` (เปิด emulator รวม auth, รัน `functions/scripts/seed-emulator.js` พร้อมตั้ง `FIRESTORE_EMULATOR_HOST`/`FIREBASE_AUTH_EMULATOR_HOST`, แล้ว `npx serve web` และเปิด URL ที่ลงท้าย `#emulator`) การรันหน้าเว็บกับโปรเจกต์จริงต้องคัดลอก `web/review-queue/firebase-config.example.js` เป็น `firebase-config.js` (ถูก git ignore)
+
+## สถาปัตยกรรมโค้ด
+
+- **Client ไม่แตะ Firestore ตรง** หน้าใน `web/` เรียก callable function เท่านั้น ยกเว้น Security Rules (`firebase/firestore.rules`) ที่อนุญาตเฉพาะ `lecturer`/`admin` ที่ `active` อ่าน `chatMessages` ตรง การเขียนทุกอย่างและ collection อื่นปฏิเสธทั้งหมด (NFR-04, NFR-06 ต้องการให้ backend กรองข้อความที่ยังไม่อนุมัติและตัดชื่อผู้ส่ง)
+- **รูปแบบ handler:** logic อยู่ใน `functions/lib/*.js` เป็นฟังก์ชัน `(db, auth, data)` ที่ทดสอบกับ emulator ได้โดยตรง `functions/index.js` ห่อแต่ละตัวด้วย `wrap()` เป็น callable ฟังก์ชันใหม่ที่ client เรียกต้อง export ใน `index.js` ด้วย (`test/exports.test.js` ตรวจเรื่องนี้)
+- **สิทธิ์:** ตัวตนมาจาก Firebase Auth แต่บทบาทอ่านจาก `users/{uid}.roles` (`student`/`advisor`/`lecturer`/`admin`) ผ่าน `lib/access.js` (`requireActiveUser`, `requireRole`) id เอกสาร `users` ต้องเท่ากับ Auth uid การอ่านข้อมูลผู้เรียนต้องผ่าน `requireLearnerAccess` ใน `lib/learners.js`
+- **Audit:** การเปลี่ยนค่าตั้งต้นและบัญชีบันทึกลง `configChangeAudits` ผ่าน `lib/audit.js` และการตัดสินข้อความลง `auditEvents` ในธุรกรรมเดียวกับการเปลี่ยนสถานะ ทั้งสอง collection เพิ่มอย่างเดียว
+- **แชทที่ผ่านการตรวจ** (`lib/chat.js`): ล็อก token ของผู้ตรวจเก็บแยกที่ `reviewLocks/{messageId}` (client อ่านไม่ได้) ไม่เก็บบนเอกสารข้อความ คำตัดสินเป็นฟิลด์ `decision` ส่งใหม่หลังถูกปฏิเสธได้ครั้งละหนึ่งผ่านฟิลด์ `resubmitOfId`
+- **ข้อมูลการเรียน:** `lib/sync.js` นำเข้าข้อมูลแบบไม่ผูกแหล่ง (`importLearningData`) บันทึก `syncRuns`/`syncState` และ `lib/risk.js` ประเมินความเสี่ยงด้วยกฎ threshold (`lib/thresholds.js`) ยังไม่มี scheduler ตั้งเวลาอัตโนมัติ
+
+## ระบบ Grade Runway (โค้ด)
+
+ระบบติดตามความเสี่ยงการเรียนของผู้เรียน + แชทแนะนำแนวทางการเรียนระหว่างนักศึกษาที่ผ่านการตรวจของอาจารย์/Admin ก่อนเผยแพร่ ข้อมูลในหัวข้อนี้อ่านจากโค้ดใน `functions/`, `web/` และ `firebase/` (ไม่ได้มาจาก spec) ถ้าโค้ดเปลี่ยนให้แก้ที่นี่ด้วย
+
+### โครงสร้างโฟลเดอร์
+- `web/admin/` หน้า Admin: นโยบายระบบ, กฎ threshold, นำเข้าข้อมูลการเรียน, บัญชีและบทบาท, ความสัมพันธ์ครู-ผู้เรียน (กำหนด/ยุติ/โอน), ประวัติการเปลี่ยนแปลง
+- `web/dashboard/` หน้าผู้เรียน (ดูสถานการณ์การเรียนของตน) และครูที่ปรึกษา (ดูผู้เรียนในความดูแล อ่านอย่างเดียว)
+- `web/review-queue/` หน้าผู้ตรวจ (lecturer/admin): ล็อกข้อความ ระบุเชิงลบ/ไม่เชิงลบ อนุมัติ/ปฏิเสธ ปลดล็อก และเก็บ `firebase-config.js` ที่สามหน้าใช้ร่วมกัน
+- `functions/lib/` logic ทั้งหมดของ backend แยกตามเรื่อง: `access` (สิทธิ์), `accounts`, `chat`, `sync`, `risk`, `thresholds`, `policy`, `situation`, `learners`, `history`, `audit`, `errors`, `migrate-locks`
+- `firebase/firestore.rules` Security Rules (ทดสอบใน `functions/test/rules.test.js`)
+
+### Collection ใน Firestore (ที่โค้ดใช้จริง)
+| Collection | ช่องสำคัญ |
+|---|---|
+| `users/{authUid}` | `name`, `email`, `roles[]`, `status`, `source` |
+| `advisorAssignments` | `advisorId`, `learnerId`, `advisorName`, `learnerName`, `status`, `source` |
+| `chatMessages` | `senderId`, `senderName`, `content`, `status`, `sentAt`, `resubmitOfId`, `decision {reviewerId, outcome, negative, reason, at}` |
+| `reviewLocks/{messageId}` | `holderId`, `token`, `expiresAt` (มีเฉพาะตอนถูกล็อก) |
+| `auditEvents` | `type` (`lock`, `resubmit`, `review_decision`, `decision_rejected`, `unlock_manual`, `unlock_expired`), `at` |
+| `configChangeAudits` | `category` (`account`, `advisorAssignment`, `systemPolicy`, `threshold`), `action`, `targetId`, `actorId`, `before`, `after`, `at` |
+| `notifications` | `recipientId`, `type` (`message_rejected`, `decision_rejected`, `risk`, `syncFailed`), `reason`, `read`, `at` |
+| `eligibilityResults/{learnerId}` | `eligible` (โค้ดอ่านอย่างเดียว ยังไม่มีโค้ดที่เขียน ข้อมูลมาจาก seed) |
+| `systemPolicy/current` | `syncIntervalMinutes`, `lockDurationMinutes`, `showSenderName`, `maxMissingImportPercent` |
+| `riskThresholdRules` | `variable` (`grade`, `attendance`, `assignment`, `trend`), `name`, `threshold` |
+| `gradeRecords`, `attendanceRecords`, `assignmentRecords` | `learnerId`, `course`, `period` + `grade` / `rate` / `required`+`submitted`, `syncRunId` |
+| `syncRuns` | `outcome`, `startedAt`, `finishedAt`, `counts`, `errors`, `source`, `actorId` |
+| `syncState/current` | `status`, `lastSuccessAt`, `lastRunId` |
+| `riskAssessments` | `learnerId`, `assessedAt`, `trend`, `atRisk`, `basicOnly`, `findings`, `notified` |
+| `recommendations/{assessmentId}` | `learnerId`, `assessmentId`, `text`, `basic` |
+
+### ค่าสถานะ
+- `chatMessages.status`: `pending` → `approved` | `rejected` (ตั้งโดย `decideMessage` ครั้งเดียว `decision.outcome` เป็น `approve` | `reject`)
+- `users.status`: `active` | `disabled` (ปิดแล้วทำ operation ใดไม่ได้)
+- `advisorAssignments.status`: `active` | `ended` (ยุติ/โอนตั้งเป็น `ended` ไม่ลบเอกสาร)
+- `syncState.status`: `normal` | `stale` (ซิงก์ล้มเหลวแต่เคยสำเร็จ) | `waiting` (ล้มเหลวและไม่เคยสำเร็จ)
+- `syncRuns.outcome`: `success` | `failedWithPrevious` | `failedFirst`
+- `riskAssessments.trend`: `insufficient` | `declining` | `improving` | `steady`
+
+### บทบาทใน `users.roles` (array เลือกได้หลายบทบาท)
+- `student` ผู้เรียน: ส่ง/ส่งใหม่ข้อความ (ต้อง `eligibilityResults.eligible` เป็นจริง) ดูสถานการณ์ของตน
+- `advisor` ครู/อาจารย์ที่ปรึกษา: ดูเฉพาะผู้เรียนที่มี `advisorAssignments` เป็น `active`
+- `lecturer` อาจารย์ผู้ตรวจ: ล็อก/ตัดสิน/ปลดล็อกข้อความ และอ่าน `chatMessages` ตรงได้ตาม Rules
+- `admin` ผู้ดูแลระบบ: สิทธิ์ผู้ตรวจเท่ากับ `lecturer` และจัดการบัญชี ความสัมพันธ์ นโยบาย threshold นำเข้าข้อมูล
+
+### ข้อห้าม
+- หน้าเว็บห้ามเขียน Firestore ตรง ต้องผ่าน callable function เท่านั้น (Rules ปฏิเสธการเขียนทุกอย่างอยู่แล้ว)
+- ห้าม commit `web/review-queue/firebase-config.js`, ไฟล์ `.env`/`.env.*` และ service account key (`.gitignore` ครอบคลุม `firebase-config.js`, `serviceAccount*.json`, `*.json.key` แต่**ยังไม่ครอบคลุม `.env`**)
+- ห้ามแก้ `firebase/firestore.rules` ให้หลวมลง (เช่น ให้ client เขียนได้ หรือให้ `student` อ่าน `chatMessages` ตรง) ต้องผ่าน `functions/test/rules.test.js` และบอกผู้ใช้ก่อนเสมอ
+- ข้อความที่ `rejected` ห้ามแก้ ปิดถาวร ผู้ส่งต้องสร้างข้อความใหม่ผ่าน `resubmitMessage` (ครั้งละหนึ่ง)
+- `auditEvents` และ `configChangeAudits` เพิ่มอย่างเดียว ห้ามลบหรือแก้ (เขียนใน transaction เดียวกับการเปลี่ยนข้อมูลเสมอ)
 
 ## ภาพรวมระบบที่กำลังวางแผน
 
-เอกสารข้อกำหนด (ไฟล์ Markdown ใน `docs/01-requirements/01-spec/` — อาจมีมากกว่า 1 ไฟล์ตามความต้องการที่ทยอยเพิ่มเข้ามา ให้ดูรายการไฟล์จริงในโฟลเดอร์นี้แทนการอ้างชื่อไฟล์เจาะจง) คือแหล่งอ้างอิงเดียวที่บอกว่าระบบที่กำลังวางแผนคือระบบอะไร มีขอบเขตแค่ไหน และมีบทบาทผู้ใช้แบบใด **ห้ามสมมติโดเมนหรือฟีเจอร์ของระบบจากความจำหรือจากตัวอย่างโปรเจกต์อื่น** ให้เปิดอ่านไฟล์ spec จริงก่อนตอบคำถามเกี่ยวกับภาพรวมระบบเสมอ (โดเมนของระบบกำหนดโดยผู้ใช้และเปลี่ยนได้ในแต่ละช่วงของโปรเจกต์ ส่วนนี้ของ CLAUDE.md จึงตั้งใจไม่ระบุเจาะจงไว้ เพื่อไม่ให้ล้าสมัยเมื่อโดเมนเปลี่ยน)
+เอกสารข้อกำหนด (ไฟล์ Markdown ใน `docs/01-requirements/01-spec/` — อาจมีมากกว่า 1 ไฟล์ตามความต้องการที่ทยอยเพิ่มเข้ามา ให้ดูรายการไฟล์จริงในโฟลเดอร์นี้แทนการอ้างชื่อไฟล์เจาะจง) คือแหล่งอ้างอิงเดียวที่บอกว่าระบบที่กำลังวางแผนคือระบบอะไร มีขอบเขตแค่ไหน และมีบทบาทผู้ใช้แบบใด **ห้ามสมมติโดเมนหรือฟีเจอร์ของระบบจากความจำหรือจากตัวอย่างโปรเจกต์อื่น** ให้เปิดอ่านไฟล์ spec จริงก่อนตอบคำถามเกี่ยวกับภาพรวมระบบเสมอ (ส่วนที่พัฒนาเป็นโค้ดแล้วสรุปไว้ที่หัวข้อ "ระบบ Grade Runway (โค้ด)" ด้านบน แต่ขอบเขตและความต้องการยังต้องยึด spec จริงเสมอ)
 
 กติกาที่คงที่ไม่ว่าโดเมนของระบบจะเป็นอะไร (มาจากรูปแบบของเอกสารทั้งวอลต์ ไม่ใช่จากตัวระบบที่วางแผนอยู่):
 - ทุกความต้องการเชิงฟังก์ชัน/ไม่ใช่เชิงฟังก์ชันมีรหัสกำกับ (`FR-xx` / `NFR-xx`) และระดับความสำคัญ (สูง/กลาง/ต่ำ โดย "สูง" คือสิ่งที่ต้องมีใน MVP) — ดูสรุปล่าสุดที่ `docs/01-requirements/backlog.md`
@@ -77,4 +150,4 @@ docs/
 - ให้ยึดเอกสารทั้งหมดใน `docs/01-requirements/01-spec/` (ไม่ใช่ไฟล์ใดไฟล์หนึ่งโดยเฉพาะ) เป็นแหล่งอ้างอิงหลักของความต้องการเชิงฟังก์ชัน/ไม่ใช่เชิงฟังก์ชัน (รหัส FR-xx / NFR-xx) — ใช้รหัสเหล่านี้อ้างอิงเมื่อพูดคุยหรือวางแผนฟีเจอร์ และให้ตรวจ `docs/01-requirements/backlog.md` เพื่อดูสรุป FR/NFR ล่าสุดทั้งหมดก่อนเสมอ
 - เอกสารออกแบบเชิงเทคนิคใน `docs/02-design/02-technical/` (`architecture.md`, `api-spec.md`, `db-spec.md`, `technology-stack.md` และไฟล์ใน `detailed-design/`) หากยังไม่มีไฟล์หรือยังว่างเปล่า หากถูกขอให้ช่วยออกแบบระบบ ให้สร้าง/เติมเนื้อหาลงในไฟล์เหล่านี้ตามตำแหน่งที่ระบุไว้ในโครงสร้างด้านบน ไม่ควรสร้างเอกสารคู่ขนานแยกที่อื่น
 - `docs/02-design/DESIGN.md` คือแหล่งอ้างอิงหลัก (single source of truth) ของ Design System เชิงภาพ (สี, ตัวอักษร, ระยะห่าง, องค์ประกอบ UI, accessibility) — เมื่อสร้างหรือแก้ไข Prototype ใดๆ ใน `01-prototypes/` ให้ยึด token และกติกาใน `DESIGN.md` เสมอ ห้ามกำหนดสี/สไตล์ใหม่นอกเอกสารนี้โดยไม่จำเป็น หากพบว่า Design System ต้องเปลี่ยน ให้แก้ที่ `DESIGN.md` ก่อน แล้วค่อยสะท้อนไปยัง Prototype
-- ยังไม่มี package manifest, โครงสร้างซอร์สโค้ด หรือ CI config ใดๆ เมื่อเริ่มพัฒนาจริงแล้ว ควรกลับมาอัปเดตไฟล์นี้ให้มีคำสั่ง build/lint/test และสถาปัตยกรรมโค้ดจริง
+- เมื่อเพิ่มคำสั่ง build/lint หรือเปลี่ยนโครงสร้างโค้ด ให้อัปเดตหัวข้อ "คำสั่งที่ใช้บ่อย" และ "สถาปัตยกรรมโค้ด" ด้านบน
