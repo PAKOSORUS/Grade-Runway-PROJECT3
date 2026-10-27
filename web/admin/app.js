@@ -86,6 +86,61 @@ function policyPatch() {
   return patch;
 }
 
+// ---- thresholds ----
+async function loadThresholds() {
+  const rules = (await call.listThresholds({})).data;
+  const body = $("thresholdBody");
+  body.replaceChildren();
+  for (const r of rules) {
+    const tr = document.createElement("tr");
+    for (const [label, text] of [["ชื่อกฎ", r.name], ["ตัวแปร", r.variable]]) {
+      const td = document.createElement("td");
+      td.dataset.label = label;
+      td.textContent = text;
+      tr.appendChild(td);
+    }
+    const valueTd = document.createElement("td");
+    valueTd.dataset.label = "ค่า threshold";
+    const input = document.createElement("input");
+    input.type = "number";
+    input.step = "any";
+    input.value = r.threshold;
+    input.setAttribute("aria-label", `ค่า threshold ของ ${r.name}`);
+    valueTd.appendChild(input);
+    tr.appendChild(valueTd);
+    const metaTd = document.createElement("td");
+    metaTd.dataset.label = "แก้ล่าสุด";
+    metaTd.textContent = r.updatedAt ? `${r.updatedBy} ${formatTime(r.updatedAt)}` : "-";
+    tr.appendChild(metaTd);
+    const actionTd = document.createElement("td");
+    const save = document.createElement("button");
+    save.type = "button";
+    save.className = "secondary";
+    save.textContent = "บันทึก";
+    save.addEventListener("click", async () => {
+      const ok = await attempt(
+        "thresholdStatus",
+        () => call.setThreshold({ ruleId: r.ruleId, threshold: input.value.trim() === "" ? undefined : Number(input.value) }),
+        `บันทึกกฎ "${r.name}" แล้ว มีผลกับรอบประเมินถัดไป`
+      );
+      await loadThresholds();
+      if (ok) await loadHistory();
+    });
+    actionTd.appendChild(save);
+    tr.appendChild(actionTd);
+    body.appendChild(tr);
+  }
+  if (rules.length === 0) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 5;
+    td.className = "muted";
+    td.textContent = "ยังไม่มีกฎ (ไม่มีกฎ = ไม่มีผู้เรียนถูกประเมินว่าเสี่ยง)";
+    tr.appendChild(td);
+    body.appendChild(tr);
+  }
+}
+
 // ---- accounts ----
 function userPatch() {
   const patch = { uid: $("uUid").value.trim() };
@@ -158,6 +213,12 @@ async function loadAll() {
   }
   showMessage("", "info");
   $("app").hidden = false;
+  try {
+    await loadThresholds();
+  } catch (err) {
+    console.error(err);
+    setStatus("thresholdStatus", errorText(err), "error");
+  }
   await loadHistory();
 }
 
@@ -187,7 +248,34 @@ async function main() {
   for (const name of [
     "getSystemPolicy", "setSystemPolicy", "upsertUser", "assignLearner",
     "unassignLearner", "transferLearner", "listChangeAudits",
+    "listThresholds", "setThreshold", "runRiskAssessment",
   ]) call[name] = httpsCallable(functions, name);
+
+  $("thresholdForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const ok = await attempt(
+      "thresholdStatus",
+      () => call.setThreshold({ name: $("tName").value, variable: $("tVariable").value, threshold: Number($("tValue").value) }),
+      "เพิ่มกฎแล้ว มีผลกับรอบประเมินถัดไป"
+    );
+    if (ok) {
+      $("tName").value = "";
+      $("tValue").value = "";
+      await loadThresholds();
+      await loadHistory();
+    }
+  });
+  $("runAssess").addEventListener("click", async () => {
+    setStatus("thresholdStatus", "กำลังประเมิน…", "");
+    try {
+      const s = (await call.runRiskAssessment({})).data;
+      const failed = s.failed.length ? ` ล้มเหลว ${s.failed.length}` : "";
+      setStatus("thresholdStatus", `ประเมินแล้ว ${s.assessed} คน เสี่ยง ${s.atRisk} คน แจ้งเตือนใหม่ ${s.notified} คน${failed}`, s.failed.length ? "error" : "ok");
+    } catch (err) {
+      console.error(err);
+      setStatus("thresholdStatus", errorText(err), "error");
+    }
+  });
 
   $("login").addEventListener("submit", async (e) => {
     e.preventDefault();

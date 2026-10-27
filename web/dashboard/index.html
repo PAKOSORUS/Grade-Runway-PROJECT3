@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grade Runway — สถานการณ์การเรียน</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* Tokens from docs/02-design/DESIGN.md */
+    :root {
+      --color-brand: #9B4033;
+      --color-brand-dark: #7F3026;
+      --color-bg-page: #F8F8FC;
+      --color-bg-surface: #FFFFFF;
+      --color-border: #E3E3E8;
+      --color-shadow: rgba(0, 0, 0, 0.08);
+      --color-text: #1F1F1F;
+      --color-text-muted: #6B6B76;
+      --color-text-on-brand: #FFFFFF;
+      --status-ok-bg: #E6F4EA;   --status-ok-line: #2E7D4F;   --status-ok-text: #1E5C38;
+      --status-warn-bg: #FFF4DB; --status-warn-line: #C98A00; --status-warn-text: #7A5200;
+      --status-danger-bg: #FDE7E7; --status-danger-line: #C62828; --status-danger-text: #8E1B1B;
+      --status-info: #1F5FA8;
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { margin: 0; background: var(--color-bg-page); color: var(--color-text); font-family: "Noto Sans Thai", "Raleway", system-ui, sans-serif; font-size: 1rem; line-height: 1.5; }
+    header { background: var(--color-bg-surface); border-bottom: 3px solid var(--color-brand); padding: 12px 16px; font-weight: 600; color: var(--color-brand); }
+    main { max-width: 1000px; margin: 0 auto; padding: 24px 16px; }
+    h1 { font-size: 2rem; font-weight: 400; line-height: 1.2; margin: 0 0 8px; }
+    h2 { font-size: 1.25rem; font-weight: 600; margin: 0 0 12px; }
+    .note { color: var(--color-text-muted); font-size: 0.8125rem; margin: 0 0 16px; }
+    .card { background: var(--color-bg-surface); border-radius: 8px; box-shadow: 0 1px 4px var(--color-shadow); padding: 16px; margin-bottom: 16px; }
+    .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    label.field { display: grid; gap: 4px; font-size: 0.875rem; max-width: 360px; }
+    input, select { font: inherit; padding: 8px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-bg-surface); }
+    button { font: inherit; font-weight: 600; padding: 8px 16px; border: 0; border-radius: 4px; cursor: pointer; background: var(--color-brand); color: var(--color-text-on-brand); }
+    button:hover { background: var(--color-brand-dark); }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--status-info); outline-offset: 2px; }
+    .banner { padding: 12px 16px; border-radius: 8px; border-left: 4px solid; margin-bottom: 16px; font-weight: 500; }
+    .banner.ok { background: var(--status-ok-bg); border-color: var(--status-ok-line); color: var(--status-ok-text); }
+    .banner.warn { background: var(--status-warn-bg); border-color: var(--status-warn-line); color: var(--status-warn-text); }
+    .banner.danger { background: var(--status-danger-bg); border-color: var(--status-danger-line); color: var(--status-danger-text); }
+    .tile { border: 1px solid var(--color-border); border-left: 4px solid var(--status-ok-line); border-radius: 8px; padding: 12px; }
+    .tile.flag { border-left-color: var(--status-danger-line); background: var(--status-danger-bg); }
+    .tile .label { font-size: 0.875rem; color: var(--color-text-muted); }
+    .tile .value { font-size: 1.5rem; font-weight: 600; }
+    .tile .sub { font-size: 0.8125rem; color: var(--color-text-muted); }
+    ul { margin: 0; padding-left: 20px; }
+    li { margin-bottom: 4px; }
+    .alert { white-space: pre-line; padding: 8px 0; border-bottom: 1px solid var(--color-border); }
+    .alert:last-child { border-bottom: 0; }
+    .alert time { display: block; font-size: 0.8125rem; color: var(--color-text-muted); }
+    .advice { white-space: pre-line; }
+    .muted { color: var(--color-text-muted); }
+    #mode { background: var(--status-warn-bg); border: 1px solid var(--status-warn-line); color: var(--status-warn-text); padding: 8px 12px; border-radius: 4px; margin: 0 0 16px; font-size: 0.875rem; }
+    #login { display: grid; gap: 12px; max-width: 360px; }
+    #who { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; font-size: 0.875rem; }
+    #who button { padding: 4px 12px; }
+    #message { padding: 8px 0; }
+    #message.error { color: var(--status-danger-text); }
+    #message.info { color: var(--status-info); }
+  </style>
+</head>
+<body>
+  <header>Grade Runway</header>
+  <main>
+    <h1>สถานการณ์การเรียน</h1>
+    <p class="note">
+      ผู้เรียนเห็นเฉพาะของตนเอง ครูที่ปรึกษาเห็นเฉพาะผู้เรียนในความดูแล (อ่านอย่างเดียว) ข้อมูลมาจากการซิงก์กับระบบเดิม
+    </p>
+    <p id="mode" hidden>โหมด emulator: ข้อมูลและบัญชีทดสอบในเครื่องเท่านั้น ไม่เชื่อมต่อโปรเจกต์จริง</p>
+    <div id="who" hidden><span id="whoText"></span><button id="logout" type="button">ออกจากระบบ</button></div>
+    <div class="card" id="loginCard" hidden>
+      <form id="login">
+        <label class="field">อีเมล <input id="email" type="email" autocomplete="username" required></label>
+        <label class="field">รหัสผ่าน <input id="password" type="password" autocomplete="current-password" required></label>
+        <button type="submit">เข้าสู่ระบบ</button>
+      </form>
+    </div>
+    <div id="message" class="info" role="status">กำลังโหลด…</div>
+
+    <div id="app" hidden>
+      <div class="card" id="pickCard" hidden>
+        <label class="field">ผู้เรียน <select id="pick"></select></label>
+      </div>
+      <div id="banner" class="banner" role="status" hidden></div>
+      <div id="view" hidden>
+        <section class="card" aria-labelledby="h-status">
+          <h2 id="h-status">ภาพรวม</h2>
+          <p id="overall" style="margin:0 0 12px;font-weight:600"></p>
+          <div class="grid" id="tiles"></div>
+          <p class="note" id="asOf" style="margin:12px 0 0"></p>
+        </section>
+        <section class="card" aria-labelledby="h-why" id="whyCard" hidden>
+          <h2 id="h-why">เหตุผลที่เข้าเงื่อนไขเสี่ยง</h2>
+          <ul id="findings"></ul>
+        </section>
+        <section class="card" aria-labelledby="h-advice">
+          <h2 id="h-advice">คำแนะนำการเรียน</h2>
+          <p class="advice" id="advice"></p>
+          <p class="note" id="adviceNote" style="margin:8px 0 0"></p>
+        </section>
+        <section class="card" aria-labelledby="h-alerts">
+          <h2 id="h-alerts">ประวัติการแจ้งเตือน</h2>
+          <div id="alerts"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

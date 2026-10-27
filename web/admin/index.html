@@ -49,6 +49,15 @@
     table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
     th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--color-border); vertical-align: top; }
     tbody tr:nth-child(odd) { background: var(--color-bg-row-stripe); }
+    /* narrow screens: each threshold rule becomes a small stacked block so the save button stays visible */
+    @media (max-width: 640px) {
+      #thresholdTable thead { display: none; }
+      #thresholdTable tr, #thresholdTable td { display: block; }
+      #thresholdTable td { border-bottom: 0; padding: 4px 0; }
+      #thresholdTable tr { border-bottom: 1px solid var(--color-border); padding: 8px 0; }
+      #thresholdTable td[data-label]::before { content: attr(data-label) ": "; color: var(--color-text-muted); font-size: 0.8125rem; }
+      #thresholdTable input { width: 100%; }
+    }
     pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 0.8125rem; }
     .muted { color: var(--color-text-muted); }
     #mode { background: var(--status-warn-bg); border: 1px solid var(--status-warn-line); color: var(--status-warn-text); padding: 8px 12px; border-radius: 4px; margin: 0 0 16px; font-size: 0.875rem; }
@@ -94,6 +103,37 @@
           <p class="note" id="policyMeta"></p>
           <div class="actions"><button type="submit">บันทึกนโยบาย</button></div>
           <div class="status" id="policyStatus" role="alert"></div>
+        </form>
+      </section>
+
+      <section class="card" aria-labelledby="h-threshold">
+        <h2 id="h-threshold">กฎ threshold ความเสี่ยง</h2>
+        <p class="note">
+          เกรด/เข้าเรียน/ส่งงาน: เสี่ยงเมื่อค่าล่าสุดต่ำกว่าเกณฑ์ (เข้าเรียนและส่งงานเป็น %) ·
+          แนวโน้ม: เสี่ยงเมื่อเกรดลดลงต่อเนื่องตั้งแต่กี่ช่วงเวลาขึ้นไป · ค่าใหม่มีผลกับรอบประเมินถัดไป ผลเก่าไม่เปลี่ยน
+        </p>
+        <table id="thresholdTable">
+          <thead><tr><th>ชื่อกฎ</th><th>ตัวแปร</th><th>ค่า threshold</th><th>แก้ล่าสุด</th><th></th></tr></thead>
+          <tbody id="thresholdBody"></tbody>
+        </table>
+        <form id="thresholdForm">
+          <div class="grid" style="margin-top:12px">
+            <label class="field">ชื่อกฎ <input id="tName" required></label>
+            <label class="field">ตัวแปร
+              <select id="tVariable">
+                <option value="grade">grade (เกรด)</option>
+                <option value="attendance">attendance (เข้าเรียน %)</option>
+                <option value="assignment">assignment (ส่งงาน %)</option>
+                <option value="trend">trend (ช่วงที่ลดลงต่อเนื่อง)</option>
+              </select>
+            </label>
+            <label class="field">ค่า threshold <input id="tValue" type="number" step="any" required></label>
+          </div>
+          <div class="actions">
+            <button type="submit">เพิ่มกฎใหม่</button>
+            <button type="button" id="runAssess" class="secondary">ประเมินความเสี่ยงตอนนี้</button>
+          </div>
+          <div class="status" id="thresholdStatus" role="alert"></div>
         </form>
       </section>
 
@@ -144,6 +184,7 @@
             <select id="hCategory">
               <option value="">ทั้งหมด</option>
               <option value="systemPolicy">systemPolicy</option>
+              <option value="threshold">threshold</option>
               <option value="account">account</option>
               <option value="advisorAssignment">advisorAssignment</option>
             </select>
