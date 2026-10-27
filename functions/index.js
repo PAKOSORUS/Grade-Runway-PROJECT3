@@ -27,6 +27,7 @@ exports.setThreshold = wrap(thresholds.setThreshold);
 // Manual trigger for OP-07; the sync job will call risk.assessAll directly.
 exports.runRiskAssessment = wrap(risk.runRiskAssessment);
 exports.getLearnerSituation = wrap(situation.getLearnerSituation);
+exports.getLearnerHistory = wrap(situation.getLearnerHistory);
 exports.sendMessage =wrap(chat.sendMessage);
 exports.resubmitMessage = wrap(chat.resubmitMessage);
 exports.listApprovedMessages = wrap(chat.listApprovedMessages);

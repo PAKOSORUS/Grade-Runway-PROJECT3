@@ -121,10 +121,49 @@ function render(s) {
   if (s.alerts.length === 0) alerts.append(el("p", "ยังไม่มีการแจ้งเตือน", "muted"));
 }
 
+function renderHistory(rounds) {
+  const box = $("history");
+  box.replaceChildren();
+  if (rounds.length === 0) {
+    box.append(el("p", "ยังไม่มีประวัติการประเมิน", "muted"));
+    return;
+  }
+  for (const r of rounds) {
+    const d = el("details", undefined, "round");
+    const s = el("summary");
+    s.append(
+      document.createTextNode(`${formatTime(r.assessedAt)} · `),
+      el("span", r.atRisk ? "เข้าเงื่อนไขเสี่ยง" : "ไม่พบความเสี่ยง", r.atRisk ? "risk" : "ok"),
+      document.createTextNode(r.alert ? " · แจ้งเตือนแล้ว" : "")
+    );
+    d.append(s);
+    const body = el("div", undefined, "body");
+    const m = r.metrics;
+    body.append(
+      el(
+        "p",
+        `เกรด ${m.grade ? m.grade.value : "-"} · เข้าเรียน ${m.attendance ? m.attendance.value + "%" : "-"} · ส่งงาน ${m.assignment ? m.assignment.value + "%" : "-"} · แนวโน้ม ${m.trend ? TREND[m.trend.label] : "ข้อมูลไม่พอ"}`
+      ),
+      el("p", `ใช้ข้อมูลซิงก์ ณ ${formatTime(r.dataAsOf)}`, "note")
+    );
+    if (r.findings.length) {
+      const ul = el("ul");
+      for (const f of r.findings) ul.append(el("li", f.explanation));
+      body.append(ul);
+    }
+    if (r.recommendation) body.append(el("p", r.recommendation.text, "advice"));
+    d.append(body);
+    box.append(d);
+  }
+}
+
 async function loadLearner(learnerId) {
   showMessage("กำลังโหลด…", "info");
   try {
-    render((await call.getLearnerSituation(learnerId ? { learnerId } : {})).data);
+    const arg = learnerId ? { learnerId } : {};
+    const [situation, history] = await Promise.all([call.getLearnerSituation(arg), call.getLearnerHistory(arg)]);
+    render(situation.data);
+    renderHistory(history.data);
     showMessage("", "info");
   } catch (err) {
     console.error(err);
@@ -192,7 +231,7 @@ async function main() {
     connectFunctionsEmulator(functions, "127.0.0.1", 5001);
     $("mode").hidden = false;
   }
-  for (const name of ["getLearnerSituation", "listMyLearners"]) call[name] = httpsCallable(functions, name);
+  for (const name of ["getLearnerSituation", "getLearnerHistory", "listMyLearners"]) call[name] = httpsCallable(functions, name);
 
   $("login").addEventListener("submit", async (e) => {
     e.preventDefault();

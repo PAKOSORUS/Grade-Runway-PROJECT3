@@ -343,3 +343,52 @@ test("an ended relationship removes the advisor's view", async () => {
   await db.collection("advisorAssignments").doc("adv-1_stu-1").update({ status: "ended" });
   assert.equal(await code(situation.getLearnerSituation(db, ADV, { learnerId: "stu-1" })), "permission-denied");
 });
+
+// ---- history (T-5-05, T-5-06, FR-09) ----
+
+test("history keeps every round newest first, with reasons, advice and which round alerted", async () => {
+  await seedAtRisk();
+  await rule("r1", "attendance", "เข้าเรียนต่ำ", 80);
+  await risk.assessAll(db, { now: t(1) });
+  await risk.assessAll(db, { now: t(2) }); // same rule set: no second alert
+  await thresholds.setThreshold(db, ADMIN, { ruleId: "r1", threshold: 50 });
+  await risk.assessAll(db, { now: t(3) }); // no longer at risk
+
+  const h = await situation.getLearnerHistory(db, S1, {});
+  assert.equal(h.length, 3);
+  assert.deepEqual(h.map((r) => r.atRisk), [false, true, true]);
+  assert.deepEqual(h.map((r) => r.alert !== null), [false, false, true]); // alerted only in the first round
+  assert.equal(h[2].findings[0].threshold, 80); // older round keeps the threshold it used
+  assert.ok(h[2].recommendation.text.length > 0);
+  assert.match(h[2].alert.reason, /เข้าเรียนต่ำ/);
+});
+
+test("history respects limit and validates it", async () => {
+  await seedAtRisk();
+  await rule("r1", "attendance", "เข้าเรียนต่ำ", 80);
+  for (const n of [1, 2, 3]) await risk.assessAll(db, { now: t(n) });
+  assert.equal((await situation.getLearnerHistory(db, S1, { limit: 2 })).length, 2);
+  for (const bad of [0, 101, 1.5, "5"]) {
+    assert.equal(await code(situation.getLearnerHistory(db, S1, { limit: bad })), "invalid-argument");
+  }
+});
+
+test("history is empty before the first successful sync and for a learner never assessed", async () => {
+  assert.deepEqual(await situation.getLearnerHistory(db, S2, {}), []);
+  await seedAtRisk();
+  await rule("r1", "attendance", "เข้าเรียนต่ำ", 80);
+  await risk.assessAll(db, { now: t(1) });
+  await db.doc("syncState/current").set({ status: "waiting" });
+  assert.deepEqual(await situation.getLearnerHistory(db, S1, {}), []);
+});
+
+test("history uses the same access scope as the situation view", async () => {
+  await seedAtRisk();
+  await rule("r1", "attendance", "เข้าเรียนต่ำ", 80);
+  await risk.assessAll(db, { now: t(1) });
+  assert.equal((await situation.getLearnerHistory(db, ADV, { learnerId: "stu-1" })).length, 1);
+  assert.equal(await code(situation.getLearnerHistory(db, S2, { learnerId: "stu-1" })), "permission-denied");
+  assert.equal(await code(situation.getLearnerHistory(db, ADV2, { learnerId: "stu-1" })), "permission-denied");
+  assert.equal(await code(situation.getLearnerHistory(db, ADMIN, { learnerId: "stu-1" })), "permission-denied");
+  assert.equal(await code(situation.getLearnerHistory(db, null, { learnerId: "stu-1" })), "unauthenticated");
+});
