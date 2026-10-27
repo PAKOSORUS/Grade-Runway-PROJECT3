@@ -374,6 +374,7 @@ async function main() {
   });
   for (const b of document.querySelectorAll("#assignForm button[data-op]")) {
     b.addEventListener("click", async () => {
+      if (b.dataset.op === "unassign" && !window.confirm("ยืนยันยุติความสัมพันธ์ครู-ผู้เรียนนี้หรือไม่?")) return;
       const ok = await attempt("assignStatus", async () => assignAction(b.dataset.op), "ดำเนินการแล้ว");
       if (ok) await loadHistory();
     });
