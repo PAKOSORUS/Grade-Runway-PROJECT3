@@ -10,5 +10,5 @@
 npx serve web
 ```
 
-เปิด `http://localhost:3000/admin/#emulator` แล้ว login ด้วย `reviewer2@example.test` (บัญชี seed ที่เป็น admin) โหมดโปรเจกต์จริงใช้ `../review-queue/firebase-config.js` ร่วมกัน
+เปิด `http://localhost:3000/login/#emulator` แล้ว login ด้วย `reviewer2@example.test` (ระบบพาไป `/admin/` เอง ถ้าเปิด `/admin/#emulator` ตอนยังไม่ล็อกอินจะเด้งไป login) (บัญชี seed ที่เป็น admin) โหมดโปรเจกต์จริงใช้ `../review-queue/firebase-config.js` ร่วมกัน
 ข้อควรระวัง: เป็น prototype ใช้กับข้อมูลตัวอย่างเท่านั้น และยังไม่มีรายการบัญชีให้เลือก (ต้องกรอก uid เอง)

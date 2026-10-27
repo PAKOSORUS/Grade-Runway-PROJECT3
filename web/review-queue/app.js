@@ -13,7 +13,6 @@ import {
   getAuth,
   connectAuthEmulator,
   onAuthStateChanged,
-  signInWithEmailAndPassword,
   signOut,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
@@ -22,9 +21,10 @@ import {
   httpsCallable,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
 
+import { goToLogin } from "../shared/nav.js";
+
 const messageEl = document.getElementById("message");
 const listEl = document.getElementById("list");
-const loginEl = document.getElementById("login");
 const whoEl = document.getElementById("who");
 
 // `npx serve` redirects "/?emulator=1" to "/" and drops the query, so the hash form
@@ -270,33 +270,15 @@ async function main() {
     call[name] = httpsCallable(functions, name);
   }
 
-  loginEl.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    try {
-      await signInWithEmailAndPassword(
-        auth,
-        document.getElementById("email").value,
-        document.getElementById("password").value
-      );
-    } catch (err) {
-      // Same wording for every failure so the page does not reveal which accounts exist.
-      showMessage("เข้าสู่ระบบไม่สำเร็จ ตรวจอีเมลและรหัสผ่าน", "error");
-      console.error(err && err.code);
-    }
-  });
   document.getElementById("logout").addEventListener("click", () => signOut(auth));
 
   onAuthStateChanged(auth, (user) => {
-    document.getElementById("password").value = "";
     locks.clear();
     listEl.replaceChildren();
     if (!user) {
-      loginEl.hidden = false;
-      whoEl.hidden = true;
-      showMessage("กรุณาเข้าสู่ระบบ", "info");
+      goToLogin();
       return;
     }
-    loginEl.hidden = true;
     whoEl.hidden = false;
     document.getElementById("whoText").textContent = user.email ?? user.uid;
     loadQueue();

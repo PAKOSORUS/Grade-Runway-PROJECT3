@@ -19,13 +19,13 @@ cd functions
 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 node scripts/seed-emulator.js
 ```
 
-3. เปิดหน้าเว็บ (ไม่ใช้ `file://` เพราะ ES module):
+3. เปิดหน้าเว็บจากโฟลเดอร์ `web` (ไม่ใช้ `file://` เพราะ ES module และทุกหน้าใช้โฟลเดอร์ `login/`, `shared/` ร่วมกัน จึงต้อง serve ทั้ง `web`):
 
 ```bash
-npx serve web/review-queue
+npx serve web
 ```
 
-4. เปิด `http://localhost:3000/#emulator` (ต้องมี `#emulator` จึงจะใช้ emulator `serve` ตัดค่า `?emulator=1` ทิ้งเมื่อ redirect) จะเห็นแถบ "โหมด emulator" แล้ว login ด้วยบัญชีที่สคริปต์ seed พิมพ์ไว้ (reviewer1@example.test ฯลฯ รหัสผ่านใช้ได้เฉพาะใน emulator)
+4. เปิด `http://localhost:3000/login/#emulator` (ต้องมี `#emulator` จึงจะใช้ emulator `serve` ตัดค่า `?emulator=1` ทิ้งเมื่อ redirect) จะเห็นแถบ "โหมด emulator" แล้ว login ด้วยบัญชีที่สคริปต์ seed พิมพ์ไว้ หรือสมัครบัญชีใหม่ (ได้บทบาท student) ระบบพาไปหน้าตามบทบาท: admin → `/admin/`, lecturer → `/review-queue/`, นอกนั้น → `/dashboard/` ถ้าเปิดหน้าอื่นโดยไม่ได้ล็อกอินจะเด้งกลับมาหน้า login (reviewer1@example.test ฯลฯ รหัสผ่านใช้ได้เฉพาะใน emulator)
 
 ข้อมูลใน emulator หายเมื่อปิด ต้อง seed ใหม่
 

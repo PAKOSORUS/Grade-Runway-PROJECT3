@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grade Runway — เข้าสู่ระบบ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* Tokens from docs/02-design/DESIGN.md (same as web/admin) */
+    :root {
+      --color-brand: #9B4033;
+      --color-brand-dark: #7F3026;
+      --color-bg-page: #F8F8FC;
+      --color-bg-surface: #FFFFFF;
+      --color-border: #E3E3E8;
+      --color-shadow: rgba(0, 0, 0, 0.08);
+      --color-text: #1F1F1F;
+      --color-text-muted: #6B6B76;
+      --color-text-on-brand: #FFFFFF;
+      --status-ok-text: #1E5C38;
+      --status-warn-bg: #FFF4DB; --status-warn-line: #C98A00; --status-warn-text: #7A5200;
+      --status-danger-text: #8E1B1B;
+      --status-info: #1F5FA8;
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { margin: 0; background: var(--color-bg-page); color: var(--color-text); font-family: "Noto Sans Thai", "Raleway", system-ui, sans-serif; font-size: 1rem; line-height: 1.5; }
+    header { background: var(--color-bg-surface); border-bottom: 3px solid var(--color-brand); padding: 12px 16px; font-weight: 600; color: var(--color-brand); }
+    main { max-width: 480px; margin: 0 auto; padding: 24px 16px; }
+    h1 { font-size: 2rem; font-weight: 400; line-height: 1.2; margin: 0 0 8px; }
+    h2 { font-size: 1.25rem; font-weight: 600; margin: 0 0 12px; }
+    .note { color: var(--color-text-muted); font-size: 0.8125rem; margin: 0 0 16px; }
+    .card { background: var(--color-bg-surface); border-radius: 8px; box-shadow: 0 1px 4px var(--color-shadow); padding: 16px; margin-bottom: 16px; }
+    form { display: grid; gap: 12px; }
+    label.field { display: grid; gap: 4px; font-size: 0.875rem; }
+    input { font: inherit; padding: 8px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-bg-surface); }
+    button { font: inherit; font-weight: 600; padding: 8px 16px; border: 0; border-radius: 4px; cursor: pointer; background: var(--color-brand); color: var(--color-text-on-brand); }
+    button:hover { background: var(--color-brand-dark); }
+    button.secondary { background: var(--color-bg-surface); color: var(--color-brand); border: 1px solid var(--color-brand); }
+    button:focus-visible, input:focus-visible { outline: 3px solid var(--status-info); outline-offset: 2px; }
+    .status { margin-top: 8px; font-weight: 600; }
+    .status.ok { color: var(--status-ok-text); }
+    .status.error { color: var(--status-danger-text); }
+    #mode { background: var(--status-warn-bg); border: 1px solid var(--status-warn-line); color: var(--status-warn-text); padding: 8px 12px; border-radius: 4px; margin: 0 0 16px; font-size: 0.875rem; }
+    #message { padding: 8px 0; }
+    #message.error { color: var(--status-danger-text); }
+    #message.info { color: var(--status-info); }
+  </style>
+</head>
+<body>
+  <header>Grade Runway</header>
+  <main>
+    <h1>เข้าสู่ระบบ</h1>
+    <p class="note">
+      สมัครบัญชีใหม่ได้ด้วยตนเอง บัญชีที่สมัครเองจะได้บทบาทนักศึกษาเท่านั้น บทบาทอื่นต้องให้ผู้ดูแลระบบกำหนด
+    </p>
+    <p id="mode" hidden>โหมด emulator: ข้อมูลและบัญชีทดสอบในเครื่องเท่านั้น ไม่เชื่อมต่อโปรเจกต์จริง</p>
+    <div id="message" class="info" role="status">กำลังโหลด…</div>
+
+    <div id="forms" hidden>
+      <div class="card">
+        <h2>เข้าสู่ระบบ</h2>
+        <form id="loginForm">
+          <label class="field">อีเมล <input id="email" type="email" autocomplete="username" required></label>
+          <label class="field">รหัสผ่าน <input id="password" type="password" autocomplete="current-password" required></label>
+          <button type="submit">เข้าสู่ระบบ</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>สมัครบัญชีใหม่</h2>
+        <form id="signupForm">
+          <label class="field">ชื่อ <input id="sName" type="text" autocomplete="name" maxlength="100" required></label>
+          <label class="field">อีเมล <input id="sEmail" type="email" autocomplete="username" required></label>
+          <label class="field">รหัสผ่าน (อย่างน้อย 6 ตัวอักษร) <input id="sPassword" type="password" autocomplete="new-password" minlength="6" required></label>
+          <button type="submit">สมัครบัญชี</button>
+        </form>
+        <div id="retryBox" hidden>
+          <p class="note">สร้างบัญชีล็อกอินแล้ว แต่ยังลงทะเบียนในระบบไม่สำเร็จ</p>
+          <button id="retry" type="button" class="secondary">ลองลงทะเบียนอีกครั้ง</button>
+        </div>
+        <div class="status" id="signupStatus" role="alert"></div>
+      </div>
+    </div>
+  </main>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
