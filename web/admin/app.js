@@ -13,7 +13,6 @@ import {
   getAuth,
   connectAuthEmulator,
   onAuthStateChanged,
-  signInWithEmailAndPassword,
   signOut,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
@@ -21,6 +20,8 @@ import {
   connectFunctionsEmulator,
   httpsCallable,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
+
+import { goToLogin } from "../shared/nav.js";
 
 const $ = (id) => document.getElementById(id);
 const useEmulator =
@@ -351,15 +352,6 @@ async function main() {
     }
   });
 
-  $("login").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    try {
-      await signInWithEmailAndPassword(auth, $("email").value, $("password").value);
-    } catch (err) {
-      showMessage("เข้าสู่ระบบไม่สำเร็จ ตรวจอีเมลและรหัสผ่าน", "error");
-      console.error(err && err.code);
-    }
-  });
   $("logout").addEventListener("click", () => signOut(auth));
 
   $("policyForm").addEventListener("submit", async (e) => {
@@ -383,15 +375,11 @@ async function main() {
   $("hCategory").addEventListener("change", loadHistory);
 
   onAuthStateChanged(auth, (user) => {
-    $("password").value = "";
     $("app").hidden = true;
     if (!user) {
-      $("loginCard").hidden = false;
-      $("who").hidden = true;
-      showMessage("กรุณาเข้าสู่ระบบ", "info");
+      goToLogin();
       return;
     }
-    $("loginCard").hidden = true;
     $("who").hidden = false;
     $("whoText").textContent = user.email ?? user.uid;
     loadAll();

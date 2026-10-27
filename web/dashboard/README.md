@@ -10,7 +10,7 @@
 npx serve web
 ```
 
-1. เปิด `http://localhost:3000/admin/#emulator` login ด้วย `reviewer2@example.test` กด "ประเมินความเสี่ยงตอนนี้" (ยังไม่มีงานซิงก์อัตโนมัติ)
-2. เปิด `http://localhost:3000/dashboard/#emulator` login ด้วย `student1@example.test` (ผู้เรียนที่เสี่ยง) หรือ `advisor1@example.test` (ครูของ student1)
+1. เปิด `http://localhost:3000/login/#emulator` login ด้วย `reviewer2@example.test` กด "ประเมินความเสี่ยงตอนนี้" (ยังไม่มีงานซิงก์อัตโนมัติ)
+2. ออกจากระบบ แล้ว login ที่ `http://localhost:3000/login/#emulator` ด้วย `student1@example.test` (ผู้เรียนที่เสี่ยง) หรือ `advisor1@example.test` (ครูของ student1)
 
 บัญชีทดสอบใช้รหัสผ่านที่ seed พิมพ์ไว้ ใช้ได้เฉพาะใน emulator ข้อควรระวัง: เป็น prototype ใช้กับข้อมูลตัวอย่างเท่านั้น

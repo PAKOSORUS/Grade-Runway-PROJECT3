@@ -69,6 +69,7 @@
 - ประวัติการเปลี่ยนแปลงสำหรับ Admin (T-1-09, `lib/history.js`): อ่านอย่างเดียว กรองตาม category/targetId ได้ ต้องมี composite index ตาม `firestore.indexes.json` เมื่อ deploy จริง
 - นโยบายระบบ (OP-02, OP-43, `lib/policy.js`): Admin อ่าน/ตั้งค่า `systemPolicy/current` (ความถี่ซิงก์ ระยะเวลาล็อก แสดงชื่อผู้ส่ง เกณฑ์สัดส่วนรายการนำเข้าที่หาย) บันทึก audit หมวด `systemPolicy` เฉพาะ field ที่เปลี่ยนจริง ไม่บันทึกถ้าไม่มีอะไรเปลี่ยน
 - หน้าจอ Admin: `web/admin/` (นโยบาย บัญชี ความสัมพันธ์ครู-ผู้เรียน ประวัติการเปลี่ยนแปลง) เรียก callable อย่างเดียว ใช้ emulator ผ่าน `#emulator` ตามหน้า review-queue
+- สมัครเองและล็อกอิน (FR-28..FR-31, `lib/register.js`): `registerSelf` สร้าง `users/{uid}` เป็น `student`/`active`/`source: "self"` จาก uid และอีเมลใน token (รับแค่ `name` ไม่เขียนทับของเดิม บันทึก audit) และ `getMyProfile` คืน name/roles/status ของผู้เรียกเอง หน้า `web/login/` ใช้ Firebase Auth อีเมล/รหัสผ่าน (วิธี login อื่นยังไม่กำหนด) ส่วน `web/shared/nav.js` พาไปหน้าตามบทบาท ในโปรเจกต์จริงต้องเปิดผู้ให้บริการ Email/Password ใน Firebase Console ก่อน (ยังไม่ได้ทำ ใช้ emulator เท่านั้น)
 - ยังไม่ทำ: นำเข้าบัญชีจากระบบเดิม (T-1-02, T-1-04, T-1-05)
 - ทดสอบ: `cd functions && npm test` (Firestore emulator ต้องใช้ Java 21 ขึ้นไป) ผ่าน 58 ข้อ (รวมเทสต์ Firestore rules ด้วย `@firebase/rules-unit-testing`) ยังไม่ได้ deploy และไม่ได้ทดสอบกับ Firebase จริง (ต้องใช้แผน Blaze ผู้ใช้เลือกเลื่อนไว้)
 

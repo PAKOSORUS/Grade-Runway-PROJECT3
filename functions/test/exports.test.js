@@ -11,7 +11,7 @@ const index = fs.readFileSync(path.join(__dirname, "..", "index.js"), "utf8");
 // Exported from lib/ on purpose but not callable by clients.
 const INTERNAL = new Set(["requireLearnerAccess", "releaseExpiredLocks"]);
 
-for (const mod of ["accounts", "learners", "history", "chat", "policy"]) {
+for (const mod of ["accounts", "learners", "history", "chat", "policy", "register"]) {
   test(`index.js exports every client-facing handler of lib/${mod}.js`, () => {
     const handlers = Object.entries(require(`../lib/${mod}`))
       .filter(([, v]) => typeof v === "function")
