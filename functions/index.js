@@ -8,6 +8,9 @@ const learners = require("./lib/learners");
 const history = require("./lib/history");
 const chat = require("./lib/chat");
 const policy = require("./lib/policy");
+const thresholds = require("./lib/thresholds");
+const risk = require("./lib/risk");
+const situation = require("./lib/situation");
 
 initializeApp();
 const db = getFirestore();
@@ -19,6 +22,11 @@ exports.listMyLearners = wrap(learners.listMyLearners);
 exports.listChangeAudits = wrap(history.listChangeAudits);
 exports.getSystemPolicy = wrap(policy.getSystemPolicy);
 exports.setSystemPolicy = wrap(policy.setSystemPolicy);
+exports.listThresholds = wrap(thresholds.listThresholds);
+exports.setThreshold = wrap(thresholds.setThreshold);
+// Manual trigger for OP-07; the sync job will call risk.assessAll directly.
+exports.runRiskAssessment = wrap(risk.runRiskAssessment);
+exports.getLearnerSituation = wrap(situation.getLearnerSituation);
 exports.sendMessage =wrap(chat.sendMessage);
 exports.resubmitMessage = wrap(chat.resubmitMessage);
 exports.listApprovedMessages = wrap(chat.listApprovedMessages);
