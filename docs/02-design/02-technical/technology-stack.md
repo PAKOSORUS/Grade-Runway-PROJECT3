@@ -83,3 +83,9 @@
 - ข้อผิดพลาดที่พบและแก้: `functions/index.js` ใน PR #19 ยังไม่ export callable ของ chat (test เรียก handler ตรง จึงไม่เจอ) พบตอนเปิด Functions emulator แก้แล้ว
 - `functions/test/exports.test.js` ตรวจว่า handler ของ lib/ ที่ client เรียกได้ถูก export ใน `index.js` ครบ (กันบั๊กแบบที่เกิดใน PR #19) ผ่านรวม 58 ข้อ
 - ย้ายล็อกเดิม: `functions/scripts/migrate-locks.js` (dry run เป็นค่าเริ่มต้น ใช้ `--apply` เพื่อเขียน) ย้ายฟิลด์ `lock` บน `chatMessages` ไป `reviewLocks` ทดสอบแล้วใน `test/migrate-locks.test.js` ยังไม่มีข้อมูลจริงให้ย้าย
+
+### เกณฑ์ผู้ผ่านเกณฑ์ (Phase 2 ส่วน T-2-09, `functions/lib/eligibility.js`)
+
+- Admin ตั้งเกณฑ์ผ่าน `setEligibilityCriteria` และอ่านผ่าน `getEligibilityCriteria` เกณฑ์เก็บใน collection `eligibilityCriteria` เป็นเอกสารตามเวอร์ชัน (`criteria-v1`, `criteria-v2` ...) ทุกครั้งที่เปลี่ยนจะสร้างเวอร์ชันใหม่ ตั้งเวอร์ชันเดิม `isCurrent: false` ไม่แก้หรือลบเวอร์ชันเก่า และบันทึก audit (category `eligibilityCriteria` ค่าก่อน-หลัง) ใน transaction เดียวกัน
+- องค์ประกอบของเกณฑ์ spec ยังไม่กำหนด จึงเก็บ `rules` เป็น object ที่ไม่ตีความ (จำกัดขนาด 20 KB) ตัวประเมินผลในอนาคตจะกำหนดรูปแบบที่แน่นอน
+- ยังไม่ทำ: การประเมินนักศึกษาแต่ละคนกับเกณฑ์และเขียน `eligibilityResults/{uid}` (T-2-10, T-2-11) ซึ่งต้องรู้องค์ประกอบของเกณฑ์และมีข้อมูลซิงก์ ดังนั้นผู้ส่งข้อความยังต้องมีผลที่สร้างด้วยมือ
