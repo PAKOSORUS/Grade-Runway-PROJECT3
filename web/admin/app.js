@@ -141,6 +141,59 @@ async function loadThresholds() {
   }
 }
 
+// ---- learning data import ----
+const OUTCOME = { success: "สำเร็จ", failedWithPrevious: "ล้มเหลว (ใช้ข้อมูลเดิม)", failedFirst: "ล้มเหลว (ครั้งแรก ยังไม่มีข้อมูล)" };
+
+async function loadRuns() {
+  const runs = (await call.listSyncRuns({ limit: 10 })).data;
+  const body = $("runBody");
+  body.replaceChildren();
+  for (const r of runs) {
+    const tr = document.createElement("tr");
+    const detail =
+      r.outcome === "success"
+        ? `เกรด ${r.counts.grades} · เข้าเรียน ${r.counts.attendance} · ส่งงาน ${r.counts.assignments}` +
+          (r.skippedLearnerCount ? ` · ข้ามผู้เรียนที่ไม่พบ ${r.skippedLearnerCount}` : "")
+        : `${r.reason}: ${r.errors.join(" | ")}${r.errorCount > r.errors.length ? ` (รวม ${r.errorCount} รายการ)` : ""}`;
+    for (const text of [formatTime(r.startedAt), OUTCOME[r.outcome] ?? r.outcome, detail]) {
+      const td = document.createElement("td");
+      td.textContent = text;
+      tr.appendChild(td);
+    }
+    body.appendChild(tr);
+  }
+  if (runs.length === 0) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 3;
+    td.className = "muted";
+    td.textContent = "ยังไม่เคยนำเข้าข้อมูล";
+    tr.appendChild(td);
+    body.appendChild(tr);
+  }
+}
+
+async function runImport() {
+  const text = $("importText").value.trim();
+  if (!text) throw new Error("ต้องเลือกไฟล์หรือวาง JSON ก่อน");
+  let payload;
+  try {
+    payload = JSON.parse(text);
+  } catch {
+    throw new Error("อ่าน JSON ไม่ได้ ตรวจรูปแบบอีกครั้ง");
+  }
+  const r = (await call.importLearningData(payload)).data;
+  await loadRuns();
+  if (!r.ok) {
+    const more = r.errorCount > r.errors.length ? ` (รวม ${r.errorCount} รายการ)` : "";
+    throw new Error(`ซิงก์ล้มเหลว (${r.reason}): ${r.errors.join(" | ")}${more} — ข้อมูลเดิมไม่ถูกแตะ`);
+  }
+  const a = r.assessment;
+  return `นำเข้าแล้ว เกรด ${r.counts.grades} เข้าเรียน ${r.counts.attendance} ส่งงาน ${r.counts.assignments}` +
+    (r.skippedLearnerCount ? ` ข้ามผู้เรียนที่ไม่พบ ${r.skippedLearnerCount}` : "") +
+    (a ? ` · ประเมิน ${a.assessed} คน เสี่ยง ${a.atRisk} คน แจ้งเตือนใหม่ ${a.notified} คน` : "");
+}
+
 // ---- accounts ----
 function userPatch() {
   const patch = { uid: $("uUid").value.trim() };
@@ -219,6 +272,12 @@ async function loadAll() {
     console.error(err);
     setStatus("thresholdStatus", errorText(err), "error");
   }
+  try {
+    await loadRuns();
+  } catch (err) {
+    console.error(err);
+    setStatus("importStatus", errorText(err), "error");
+  }
   await loadHistory();
 }
 
@@ -248,8 +307,23 @@ async function main() {
   for (const name of [
     "getSystemPolicy", "setSystemPolicy", "upsertUser", "assignLearner",
     "unassignLearner", "transferLearner", "listChangeAudits",
-    "listThresholds", "setThreshold", "runRiskAssessment",
+    "listThresholds", "setThreshold", "runRiskAssessment", "importLearningData", "listSyncRuns",
   ]) call[name] = httpsCallable(functions, name);
+
+  $("importFile").addEventListener("change", async () => {
+    const f = $("importFile").files[0];
+    if (f) $("importText").value = await f.text();
+  });
+  $("importForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    setStatus("importStatus", "กำลังนำเข้า…", "");
+    try {
+      setStatus("importStatus", await runImport(), "ok");
+    } catch (err) {
+      console.error(err);
+      setStatus("importStatus", errorText(err), "error");
+    }
+  });
 
   $("thresholdForm").addEventListener("submit", async (e) => {
     e.preventDefault();

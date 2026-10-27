@@ -1,0 +1,17 @@
+{
+  "source": "sample",
+  "grades": [
+    { "learnerId": "stu-1", "course": "MATH101", "period": "2568-1", "grade": 3.2 },
+    { "learnerId": "stu-1", "course": "MATH101", "period": "2568-2", "grade": 2.6 },
+    { "learnerId": "stu-1", "course": "MATH101", "period": "2568-3", "grade": 2.1 },
+    { "learnerId": "stu-2", "course": "MATH101", "period": "2568-3", "grade": 3.4 }
+  ],
+  "attendance": [
+    { "learnerId": "stu-1", "course": "MATH101", "period": "2568-3", "rate": 62 },
+    { "learnerId": "stu-2", "course": "MATH101", "period": "2568-3", "rate": 95 }
+  ],
+  "assignments": [
+    { "learnerId": "stu-1", "course": "MATH101", "period": "2568-3", "required": 10, "submitted": 9 },
+    { "learnerId": "stu-2", "course": "MATH101", "period": "2568-3", "required": 10, "submitted": 10 }
+  ]
+}

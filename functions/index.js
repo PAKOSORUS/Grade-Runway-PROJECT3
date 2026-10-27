@@ -11,6 +11,7 @@ const policy = require("./lib/policy");
 const thresholds = require("./lib/thresholds");
 const risk = require("./lib/risk");
 const situation = require("./lib/situation");
+const sync = require("./lib/sync");
 
 initializeApp();
 const db = getFirestore();
@@ -26,6 +27,8 @@ exports.listThresholds = wrap(thresholds.listThresholds);
 exports.setThreshold = wrap(thresholds.setThreshold);
 // Manual trigger for OP-07; the sync job will call risk.assessAll directly.
 exports.runRiskAssessment = wrap(risk.runRiskAssessment);
+exports.importLearningData = wrap(sync.importLearningData);
+exports.listSyncRuns = wrap(sync.listSyncRuns);
 exports.getLearnerSituation = wrap(situation.getLearnerSituation);
 exports.getLearnerHistory = wrap(situation.getLearnerHistory);
 exports.sendMessage =wrap(chat.sendMessage);
