@@ -4,9 +4,8 @@
 // the caller cannot choose a role: a self-registered account is always a
 // student, and an existing users/{uid} is never overwritten.
 const { FieldValue } = require("firebase-admin/firestore");
-const { requireActiveUser } = require("./access");
 const { recordChange } = require("./audit");
-const { unauthenticated, invalid, conflict } = require("./errors");
+const { unauthenticated, denied, invalid, missing } = require("./errors");
 
 const MAX_NAME = 100;
 
@@ -19,6 +18,8 @@ function cleanName(name) {
 
 // uid and email come from the verified token, never from the request body;
 // only `name` is taken from the caller (roles/status/uid in data are ignored).
+// OP-44: an existing account is not an error and is never touched: the result
+// is { result: "exists" } and nothing is written (no audit either).
 async function registerSelf(db, auth, data) {
   if (!auth || !auth.uid) throw unauthenticated();
   const email = typeof auth.token?.email === "string" ? auth.token.email : "";
@@ -26,8 +27,8 @@ async function registerSelf(db, auth, data) {
   const name = cleanName(data?.name);
 
   const ref = db.collection("users").doc(auth.uid);
-  await db.runTransaction(async (tx) => {
-    if ((await tx.get(ref)).exists) throw conflict("มีบัญชีผู้ใช้นี้ในระบบแล้ว");
+  return db.runTransaction(async (tx) => {
+    if ((await tx.get(ref)).exists) return { result: "exists" };
     const doc = { name, email, roles: ["student"], status: "active", source: "self" };
     tx.create(ref, { ...doc, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
     recordChange(db, tx, {
@@ -38,14 +39,20 @@ async function registerSelf(db, auth, data) {
       before: null,
       after: doc,
     });
+    return { result: "created", name, roles: ["student"], status: "active" };
   });
-  return { uid: auth.uid, roles: ["student"], status: "active" };
 }
 
-// Read-only: the caller's own profile, so a page can pick the right home page
-// after login (clients cannot read users directly, see firestore.rules).
+// OP-45, read-only: the caller's own profile, so a page can pick the right home
+// page after login (clients cannot read users directly, see firestore.rules).
+// No account yet = not-found (the page then offers sign-up completion);
+// a disabled account = permission-denied.
 async function getMyProfile(db, auth) {
-  const { user } = await requireActiveUser(db, auth);
+  if (!auth || !auth.uid) throw unauthenticated();
+  const snap = await db.collection("users").doc(auth.uid).get();
+  if (!snap.exists) throw missing("ยังไม่มีบัญชีผู้ใช้ในระบบ");
+  const user = snap.data();
+  if (user.status !== "active") throw denied("บัญชีถูกปิดใช้งาน");
   return { name: user.name ?? null, roles: Array.isArray(user.roles) ? user.roles : [], status: user.status };
 }
 

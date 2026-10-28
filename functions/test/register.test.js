@@ -28,7 +28,7 @@ test("registerSelf requires a signed-in caller", async () => {
 
 test("registerSelf creates an active student with uid and email from the token", async () => {
   const r = await register.registerSelf(db, authOf("new-1", "new1@example.test"), { name: "  สมชาย  " });
-  assert.deepEqual(r, { uid: "new-1", roles: ["student"], status: "active" });
+  assert.deepEqual(r, { result: "created", name: "สมชาย", roles: ["student"], status: "active" });
   const u = await userDoc("new-1");
   assert.equal(u.name, "สมชาย");
   assert.equal(u.email, "new1@example.test");
@@ -52,17 +52,34 @@ test("registerSelf ignores roles, status, uid and email sent by the caller", asy
   assert.equal((await db.collection("users").doc("someone-else").get()).exists, false);
 });
 
-test("registerSelf never overwrites an existing users document", async () => {
+test("registerSelf on an existing account answers exists, never overwrites and writes no audit", async () => {
   await db.collection("users").doc("admin-1").set({ name: "Admin", email: "a@example.test", roles: ["admin"], status: "active", source: "admin" });
-  assert.equal(await code(register.registerSelf(db, authOf("admin-1"), { name: "Hijack" })), "failed-precondition");
+  assert.deepEqual(await register.registerSelf(db, authOf("admin-1"), { name: "Hijack" }), { result: "exists" });
   const u = await userDoc("admin-1");
   assert.deepEqual(u.roles, ["admin"]);
   assert.equal(u.name, "Admin");
+  assert.equal(u.source, "admin");
   assert.equal((await audits()).length, 0);
 
-  await register.registerSelf(db, authOf("new-3"), { name: "Once" });
-  assert.equal(await code(register.registerSelf(db, authOf("new-3"), { name: "Twice" })), "failed-precondition");
+  // a disabled account is also left untouched
+  await db.collection("users").doc("off-2").set({ name: "Off", email: "o@example.test", roles: ["lecturer"], status: "disabled", source: "admin" });
+  assert.deepEqual(await register.registerSelf(db, authOf("off-2"), { name: "Back" }), { result: "exists" });
+  assert.equal((await userDoc("off-2")).status, "disabled");
+
+  assert.equal((await register.registerSelf(db, authOf("new-3"), { name: "Once" })).result, "created");
+  assert.deepEqual(await register.registerSelf(db, authOf("new-3"), { name: "Twice" }), { result: "exists" });
   assert.equal((await userDoc("new-3")).name, "Once");
+  assert.equal((await audits()).length, 1);
+});
+
+test("two simultaneous sign-ups of one uid create the account once", async () => {
+  const results = await Promise.all([
+    register.registerSelf(db, authOf("race-1"), { name: "A" }),
+    register.registerSelf(db, authOf("race-1"), { name: "B" }),
+  ]);
+  assert.equal(results.filter((r) => r.result === "created").length, 1);
+  assert.equal(results.filter((r) => r.result === "exists").length, 1);
+  assert.equal((await audits()).length, 1);
 });
 
 test("registerSelf validates name and email", async () => {
@@ -94,9 +111,15 @@ test("getMyProfile returns only the caller's own name, roles and status", async 
   });
 });
 
-test("getMyProfile rejects unauthenticated, unknown and disabled accounts", async () => {
+test("getMyProfile: unauthenticated, no account (not-found) and disabled (permission-denied)", async () => {
   await db.collection("users").doc("off-1").set({ name: "Off", roles: ["student"], status: "disabled" });
   assert.equal(await code(register.getMyProfile(db, null)), "unauthenticated");
-  assert.equal(await code(register.getMyProfile(db, { uid: "ghost" })), "permission-denied");
+  assert.equal(await code(register.getMyProfile(db, { uid: "ghost" })), "not-found");
   assert.equal(await code(register.getMyProfile(db, { uid: "off-1" })), "permission-denied");
+});
+
+test("after sign-up completes, getMyProfile succeeds for the new student", async () => {
+  assert.equal(await code(register.getMyProfile(db, authOf("late-1"))), "not-found");
+  await register.registerSelf(db, authOf("late-1"), { name: "Late" });
+  assert.deepEqual(await register.getMyProfile(db, authOf("late-1")), { name: "Late", roles: ["student"], status: "active" });
 });

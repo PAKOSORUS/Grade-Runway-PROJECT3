@@ -74,8 +74,17 @@ async function main() {
 
   // While the sign-up flow runs, the auth listener must not redirect yet.
   let signingUp = false;
-  let pendingName = "";
 
+  function showFinish(text) {
+    $("forms").hidden = true;
+    $("finishCard").hidden = false;
+    $("finishStatus").textContent = text ?? "";
+    $("finishStatus").className = "status error";
+    showMessage("", "info");
+  }
+
+  // OP-45: no account yet (not-found) offers sign-up completion; a disabled
+  // account (permission-denied) or any other failure signs out with a message.
   async function enter() {
     showMessage("กำลังตรวจสอบบัญชี…", "info");
     try {
@@ -83,27 +92,32 @@ async function main() {
       goHome(profile.roles);
     } catch (err) {
       console.error(err && err.code);
+      if (err && err.code === "functions/not-found") {
+        showFinish("");
+        return;
+      }
       await signOut(auth);
-      showMessage("บัญชียังไม่พร้อมใช้งานหรือถูกปิด กรุณาติดต่อผู้ดูแลระบบ", "error");
+      showMessage(
+        err && err.code === "functions/permission-denied"
+          ? "บัญชีถูกปิดใช้งาน กรุณาติดต่อผู้ดูแลระบบ"
+          : `เข้าสู่ระบบไม่สำเร็จ: ${errorText(err)}`,
+        "error"
+      );
       $("forms").hidden = false;
     }
   }
 
-  async function registerProfile() {
-    setSignupStatus("กำลังลงทะเบียน…", "");
+  // OP-44: "exists" is a normal answer (nothing was changed), not an error.
+  async function registerProfile(name, setStatus) {
+    setStatus("กำลังลงทะเบียน…", "");
     try {
-      await call.registerSelf({ name: pendingName });
+      await call.registerSelf({ name });
+      return true;
     } catch (err) {
-      // already registered (e.g. a retry after a lost response) is fine
-      if (!(err && err.code === "functions/failed-precondition")) {
-        console.error(err);
-        $("retryBox").hidden = false;
-        setSignupStatus(errorText(err), "error");
-        return false;
-      }
+      console.error(err);
+      setStatus(errorText(err), "error");
+      return false;
     }
-    $("retryBox").hidden = true;
-    return true;
   }
 
   $("loginForm").addEventListener("submit", async (e) => {
@@ -119,7 +133,7 @@ async function main() {
 
   $("signupForm").addEventListener("submit", async (e) => {
     e.preventDefault();
-    pendingName = $("sName").value.trim();
+    const name = $("sName").value.trim();
     setSignupStatus("กำลังสมัคร…", "");
     signingUp = true;
     try {
@@ -129,17 +143,24 @@ async function main() {
       setSignupStatus(errorText(err), "error");
       return;
     }
-    if (await registerProfile()) {
-      signingUp = false;
-      await enter();
-    }
+    const registered = await registerProfile(name, setSignupStatus);
+    signingUp = false;
+    if (registered) await enter();
+    else showFinish("สร้างบัญชีล็อกอินแล้ว แต่ลงทะเบียนในระบบไม่สำเร็จ กรอกชื่อแล้วลองอีกครั้ง");
   });
 
-  $("retry").addEventListener("click", async () => {
-    if (await registerProfile()) {
-      signingUp = false;
-      await enter();
-    }
+  $("finishForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const setStatus = (text, kind) => {
+      $("finishStatus").textContent = text;
+      $("finishStatus").className = `status ${kind ?? ""}`;
+    };
+    if (await registerProfile($("fName").value.trim(), setStatus)) await enter();
+  });
+  $("finishCancel").addEventListener("click", async () => {
+    await signOut(auth);
+    $("finishCard").hidden = true;
+    $("forms").hidden = false;
   });
 
   onAuthStateChanged(auth, (user) => {

@@ -77,12 +77,21 @@
           <label class="field">รหัสผ่าน (อย่างน้อย 6 ตัวอักษร) <input id="sPassword" type="password" autocomplete="new-password" minlength="6" required></label>
           <button type="submit">สมัครบัญชี</button>
         </form>
-        <div id="retryBox" hidden>
-          <p class="note">สร้างบัญชีล็อกอินแล้ว แต่ยังลงทะเบียนในระบบไม่สำเร็จ</p>
-          <button id="retry" type="button" class="secondary">ลองลงทะเบียนอีกครั้ง</button>
-        </div>
         <div class="status" id="signupStatus" role="alert"></div>
       </div>
+    </div>
+
+    <div class="card" id="finishCard" hidden>
+      <h2>ลงทะเบียนให้เสร็จ</h2>
+      <p class="note">บัญชีล็อกอินนี้ยังไม่ได้ลงทะเบียนในระบบ กรอกชื่อแล้วกดลงทะเบียน (จะได้บทบาทนักศึกษา)</p>
+      <form id="finishForm">
+        <label class="field">ชื่อ <input id="fName" type="text" autocomplete="name" maxlength="100" required></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="submit">ลงทะเบียน</button>
+          <button id="finishCancel" type="button" class="secondary">ออกจากระบบ</button>
+        </div>
+      </form>
+      <div class="status" id="finishStatus" role="alert"></div>
     </div>
   </main>
   <script type="module" src="./app.js"></script>
