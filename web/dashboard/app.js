@@ -209,6 +209,81 @@ async function loadAll(user) {
   await loadLearner(options[0].value);
 }
 
+// ---- advice messages (students only; FR-10, FR-11, FR-15) ----
+const STATUS_TEXT = { pending: "รออนุมัติ", approved: "อนุมัติแล้ว", rejected: "ถูกปฏิเสธ" };
+const NOT_ELIGIBLE = "ไม่ผ่านเกณฑ์ผู้ส่งข้อความ";
+
+function setSendStatus(text, kind) {
+  $("sendStatus").textContent = text;
+  $("sendStatus").className = `status ${kind ?? ""}`;
+}
+
+function renderMyMessages(list) {
+  const box = $("myMessages");
+  box.replaceChildren();
+  if (list.length === 0) {
+    box.append(el("p", "ยังไม่มีข้อความที่ส่ง", "muted"));
+    return;
+  }
+  for (const m of list) {
+    const item = el("div", "", "msg");
+    const head = el("div");
+    head.append(el("span", STATUS_TEXT[m.status] ?? m.status, `badge ${m.status}`), el("time", formatTime(m.sentAt)));
+    item.append(head, el("div", m.content, "content"));
+    if (m.status === "rejected") item.append(el("div", `เหตุผลที่ปฏิเสธ: ${m.reason ?? "-"}`, "muted"));
+    if (m.resubmitOfId) item.append(el("div", "ส่งใหม่จากข้อความที่ถูกปฏิเสธ", "muted"));
+    box.append(item);
+  }
+}
+
+async function loadMyMessages() {
+  try {
+    renderMyMessages((await call.listMyMessages({})).data);
+  } catch (err) {
+    console.error(err);
+    $("myMessages").replaceChildren(el("p", `โหลดข้อความไม่สำเร็จ: ${errorText(err)}`, "status error"));
+  }
+}
+
+// The form is shown to student accounts only (the Backend refuses everyone else too).
+async function loadChat() {
+  $("chatApp").hidden = true;
+  let roles = [];
+  try {
+    roles = (await call.getMyProfile({})).data.roles;
+  } catch (err) {
+    console.error(err && err.code);
+  }
+  if (!roles.includes("student")) return;
+  $("chatApp").hidden = false;
+  setSendStatus("", "");
+  await loadMyMessages();
+}
+
+async function sendAdvice(e) {
+  e.preventDefault();
+  const content = $("msgText").value.trim();
+  if (!content) {
+    setSendStatus("ต้องระบุข้อความ", "error");
+    return;
+  }
+  setSendStatus("กำลังส่ง…", "");
+  try {
+    await call.sendMessage({ content });
+    $("msgText").value = "";
+    setSendStatus("ส่งแล้ว กำลังรอการอนุมัติ", "ok");
+    await loadMyMessages();
+  } catch (err) {
+    console.error(err);
+    setSendStatus(
+      err && err.message === NOT_ELIGIBLE
+        ? "ส่งไม่ได้: บัญชีนี้ยังไม่ผ่านเกณฑ์ผู้ส่งข้อความ (นักศึกษาที่เพิ่งสมัครต้องรอผลประเมินเกณฑ์ก่อน)"
+        : errorText(err),
+      "error"
+    );
+  }
+}
+
 async function main() {
   let config;
   if (useEmulator) {
@@ -232,7 +307,10 @@ async function main() {
     connectFunctionsEmulator(functions, "127.0.0.1", 5001);
     $("mode").hidden = false;
   }
-  for (const name of ["getLearnerSituation", "getLearnerHistory", "listMyLearners"]) call[name] = httpsCallable(functions, name);
+  for (const name of ["getLearnerSituation", "getLearnerHistory", "listMyLearners", "getMyProfile", "sendMessage", "listMyMessages"]) {
+    call[name] = httpsCallable(functions, name);
+  }
+  $("sendForm").addEventListener("submit", sendAdvice);
 
   $("logout").addEventListener("click", () => signOut(auth));
   $("pick").addEventListener("change", () => loadLearner($("pick").value));
@@ -246,6 +324,7 @@ async function main() {
     $("who").hidden = false;
     $("whoText").textContent = user.email ?? user.uid;
     loadAll(user);
+    loadChat();
   });
 }
 

@@ -35,6 +35,20 @@
     .card { background: var(--color-bg-surface); border-radius: 8px; box-shadow: 0 1px 4px var(--color-shadow); padding: 16px; margin-bottom: 16px; }
     .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
     label.field { display: grid; gap: 4px; font-size: 0.875rem; max-width: 360px; }
+    label.field.wide { max-width: none; }
+    textarea { font: inherit; width: 100%; padding: 8px; border: 1px solid var(--color-border); border-radius: 4px; resize: vertical; }
+    textarea:focus-visible { outline: 3px solid var(--status-info); outline-offset: 2px; }
+    .status { margin-top: 8px; font-weight: 600; }
+    .status.ok { color: var(--status-ok-text); }
+    .status.error { color: var(--status-danger-text); }
+    .msg { padding: 8px 0; border-bottom: 1px solid var(--color-border); }
+    .msg:last-child { border-bottom: 0; }
+    .msg .content { white-space: pre-wrap; overflow-wrap: anywhere; margin: 4px 0; }
+    .msg time { font-size: 0.8125rem; color: var(--color-text-muted); }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.8125rem; font-weight: 600; margin-right: 8px; border: 1px solid; }
+    .badge.pending { background: var(--status-warn-bg); border-color: var(--status-warn-line); color: var(--status-warn-text); }
+    .badge.approved { background: var(--status-ok-bg); border-color: var(--status-ok-line); color: var(--status-ok-text); }
+    .badge.rejected { background: var(--status-danger-bg); border-color: var(--status-danger-line); color: var(--status-danger-text); }
     input, select { font: inherit; padding: 8px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-bg-surface); }
     button { font: inherit; font-weight: 600; padding: 8px 16px; border: 0; border-radius: 4px; cursor: pointer; background: var(--color-brand); color: var(--color-text-on-brand); }
     button:hover { background: var(--color-brand-dark); }
@@ -81,6 +95,25 @@
     <p id="mode" hidden>โหมด emulator: ข้อมูลและบัญชีทดสอบในเครื่องเท่านั้น ไม่เชื่อมต่อโปรเจกต์จริง</p>
     <div id="who" hidden><span id="whoText"></span><button id="logout" type="button">ออกจากระบบ</button></div>
     <div id="message" class="info" role="status">กำลังโหลด…</div>
+
+    <div id="chatApp" hidden>
+      <section class="card" aria-labelledby="h-send">
+        <h2 id="h-send">ส่งข้อความแนะนำแนวทางการเรียน</h2>
+        <p class="note">
+          ข้อความจะเข้าสถานะรออนุมัติ และผู้อื่นจะเห็นได้หลังอาจารย์หรือผู้ดูแลระบบตรวจและอนุมัติแล้วเท่านั้น
+          ส่งได้เฉพาะนักศึกษาที่ผ่านเกณฑ์ผู้ส่งข้อความ
+        </p>
+        <form id="sendForm">
+          <label class="field wide">ข้อความ <textarea id="msgText" rows="4" maxlength="2000" required></textarea></label>
+          <div style="margin-top:12px"><button type="submit">ส่งข้อความ</button></div>
+          <div class="status" id="sendStatus" role="alert"></div>
+        </form>
+      </section>
+      <section class="card" aria-labelledby="h-mine">
+        <h2 id="h-mine">ข้อความของฉัน</h2>
+        <div id="myMessages"></div>
+      </section>
+    </div>
 
     <div id="app" hidden>
       <div class="card" id="pickCard" hidden>

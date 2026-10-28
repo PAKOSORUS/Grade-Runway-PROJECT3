@@ -139,6 +139,27 @@ async function listApprovedMessages(db, auth, data) {
   });
 }
 
+// OP-17 (FR-11, FR-15, FR-22): the sender's own messages, newest first. The
+// rejection reason is returned for rejected messages only; who reviewed and the
+// negative/non-negative flag are never returned to the sender.
+async function listMyMessages(db, auth, data) {
+  const ctx = await requireRole(db, auth, ["student"]);
+  const limit = data?.limit ?? 50;
+  if (!Number.isInteger(limit) || limit < 1 || limit > 200) throw invalid("limit ต้องเป็นจำนวนเต็ม 1-200");
+  const snap = await messages(db).where("senderId", "==", ctx.uid).orderBy("sentAt", "desc").limit(limit).get();
+  return snap.docs.map((d) => {
+    const m = d.data();
+    return {
+      id: d.id,
+      content: m.content,
+      status: m.status,
+      sentAt: m.sentAt.toDate().toISOString(),
+      resubmitOfId: m.resubmitOfId ?? null,
+      reason: m.status === "rejected" ? (m.decision?.reason ?? null) : null,
+    };
+  });
+}
+
 // FR-13: pending messages that nobody else currently holds, oldest first. The
 // caller's own live locks are included (flagged lockedByMe, with the expiry) so
 // a reviewer can find them again after a reload. The lock token is never returned.
@@ -285,6 +306,7 @@ module.exports = {
   sendMessage,
   resubmitMessage,
   listApprovedMessages,
+  listMyMessages,
   listReviewQueue,
   lockMessage,
   decideMessage,

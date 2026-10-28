@@ -35,6 +35,7 @@ exports.getLearnerHistory = wrap(situation.getLearnerHistory);
 exports.sendMessage =wrap(chat.sendMessage);
 exports.resubmitMessage = wrap(chat.resubmitMessage);
 exports.listApprovedMessages = wrap(chat.listApprovedMessages);
+exports.listMyMessages = wrap(chat.listMyMessages);
 exports.listReviewQueue = wrap(chat.listReviewQueue);
 exports.lockMessage = wrap(chat.lockMessage);
 exports.decideMessage = wrap(chat.decideMessage);
