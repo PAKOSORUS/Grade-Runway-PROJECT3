@@ -123,3 +123,44 @@ test("failed transfer changes nothing (no partial write, no audit)", async () =>
   assert.equal((await db.collection("advisorAssignments").doc("adv-1_stu-1").get()).data().status, "active");
   assert.equal((await audits()).length, before);
 });
+
+test("listAssignments is Admin only and returns active and ended relationships, active first", async () => {
+  await accounts.assignLearner(db, asAdmin, { advisorId: "adv-1", learnerId: "stu-1" });
+  await accounts.assignLearner(db, asAdmin, { advisorId: "adv-2", learnerId: "stu-1" });
+  await accounts.unassignLearner(db, asAdmin, { advisorId: "adv-1", learnerId: "stu-1" });
+
+  assert.equal(await code(accounts.listAssignments(db, null, {})), "unauthenticated");
+  assert.equal(await code(accounts.listAssignments(db, { uid: "lec-1" }, {})), "permission-denied");
+  assert.equal(await code(accounts.listAssignments(db, { uid: "adv-1" }, {})), "permission-denied");
+
+  const rows = await accounts.listAssignments(db, asAdmin, {});
+  assert.equal(rows.length, 2);
+  assert.deepEqual(rows.map((r) => [r.advisorId, r.status]), [["adv-2", "active"], ["adv-1", "ended"]]);
+  assert.equal(rows[0].learnerName, "Student 1");
+  assert.equal(rows[0].advisorName, "Advisor 2");
+  assert.equal(rows[0].source, "admin");
+  assert.ok(rows[0].updatedAt);
+  assert.deepEqual(Object.keys(rows[0]).sort(), ["advisorId", "advisorName", "id", "learnerId", "learnerName", "source", "status", "updatedAt"]);
+});
+
+test("listAssignments filters by advisor and by learner, and an ended pair can be assigned again", async () => {
+  await accounts.assignLearner(db, asAdmin, { advisorId: "adv-1", learnerId: "stu-1" });
+  await accounts.assignLearner(db, asAdmin, { advisorId: "adv-2", learnerId: "stu-1" });
+  assert.deepEqual((await accounts.listAssignments(db, asAdmin, { advisorId: "adv-2" })).map((r) => r.advisorId), ["adv-2"]);
+  assert.equal((await accounts.listAssignments(db, asAdmin, { learnerId: "stu-1" })).length, 2);
+  assert.equal((await accounts.listAssignments(db, asAdmin, { learnerId: "nobody" })).length, 0);
+
+  await accounts.unassignLearner(db, asAdmin, { advisorId: "adv-1", learnerId: "stu-1" });
+  assert.equal((await accounts.listAssignments(db, asAdmin, { advisorId: "adv-1" }))[0].status, "ended");
+  await accounts.assignLearner(db, asAdmin, { advisorId: "adv-1", learnerId: "stu-1" });
+  const again = await accounts.listAssignments(db, asAdmin, { advisorId: "adv-1" });
+  assert.equal(again.length, 1);
+  assert.equal(again[0].status, "active");
+});
+
+test("listAssignments is read-only: it writes no audit record", async () => {
+  await accounts.assignLearner(db, asAdmin, { advisorId: "adv-1", learnerId: "stu-1" });
+  const before = (await audits()).length;
+  await accounts.listAssignments(db, asAdmin, {});
+  assert.equal((await audits()).length, before);
+});

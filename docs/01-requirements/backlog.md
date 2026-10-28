@@ -42,10 +42,10 @@
 | FR-22 | ส่งข้อความใหม่หลังถูกปฏิเสธ (ข้อความเดิมปิดถาวร เก็บความสัมพันธ์ใน audit trail; ส่งใหม่ได้ครั้งละหนึ่ง) | [[20261016-02-peer-chat-recipients-lock-resubmit#4. Functional Requirements]] | Backlog |
 | NFR-06 | ความเป็นส่วนตัว (การแสดงชื่อผู้ส่ง ยังไม่กำหนด) | [[20261014-02-peer-advice-chat#5. Non-functional Requirements]] | Backlog |
 | FR-26 | จัดการความสัมพันธ์ครู/อาจารย์ที่ปรึกษากับผู้เรียนในความดูแล (ผู้ใช้ยืนยันระดับแล้ว 2026-10-17) | [[20261017-01-user-role-advisor-eligibility-management#4. Functional Requirements]] | Backlog |
-| FR-28 | สมัครบัญชีด้วยตนเอง (อีเมล/รหัสผ่าน; ได้บทบาท student เท่านั้น; ห้ามเขียนทับบัญชีเดิม) (งานรายวิชา ส่วน C; ระดับรอผู้ใช้ยืนยัน) | [[20261027-01-self-registration-and-login#4. Functional Requirements]] | Backlog |
-| FR-29 | เข้าสู่ระบบและพาไปหน้าตามบทบาท (admin → lecturer → อื่นๆ) (ระดับรอผู้ใช้ยืนยัน) | [[20261027-01-self-registration-and-login#4. Functional Requirements]] | Backlog |
-| FR-30 | ออกจากระบบทุกหน้า และไม่ล็อกอินให้เด้งไปหน้า login (ระดับรอผู้ใช้ยืนยัน) | [[20261027-01-self-registration-and-login#4. Functional Requirements]] | Backlog |
-| FR-31 | รายการที่สร้างใหม่บันทึก uid ของผู้สร้าง (ระดับรอผู้ใช้ยืนยัน) | [[20261027-01-self-registration-and-login#4. Functional Requirements]] | Backlog |
+| FR-28 | สมัครบัญชีด้วยตนเอง (อีเมล/รหัสผ่าน; ได้บทบาท student เท่านั้น; ห้ามเขียนทับบัญชีเดิม) (งานรายวิชา ส่วน C; ผู้ใช้ยืนยันระดับแล้ว 2026-10-28) | [[20261027-01-self-registration-and-login#4. Functional Requirements]] | Backlog |
+| FR-29 | เข้าสู่ระบบและพาไปหน้าตามบทบาท (admin → lecturer → อื่นๆ) (ผู้ใช้ยืนยันระดับแล้ว 2026-10-28) | [[20261027-01-self-registration-and-login#4. Functional Requirements]] | Backlog |
+| FR-30 | ออกจากระบบทุกหน้า และไม่ล็อกอินให้เด้งไปหน้า login (ผู้ใช้ยืนยันระดับแล้ว 2026-10-28) | [[20261027-01-self-registration-and-login#4. Functional Requirements]] | Backlog |
+| FR-31 | รายการที่สร้างใหม่บันทึก uid ของผู้สร้าง (ผู้ใช้ยืนยันระดับแล้ว 2026-10-28) | [[20261027-01-self-registration-and-login#4. Functional Requirements]] | Backlog |
 | NFR-07 | audit trail การเปลี่ยนบัญชี/บทบาท/การสมัครเอง (เพิ่ม 2026-10-27)/ความสัมพันธ์/เกณฑ์ผ่านเกณฑ์/ค่าตั้งการเชื่อมต่อ/นโยบายระบบ/threshold ความเสี่ยง (FR-08) (ผู้ใช้ยืนยันระดับแล้ว 2026-10-17) | [[20261017-01-user-role-advisor-eligibility-management#5. Non-functional Requirements]] | Backlog |
 
 ## ระดับความสำคัญ: ต่ำ

@@ -199,4 +199,40 @@ async function transferLearner(db, auth, data) {
   return { from: fromRef.id, to: toRef.id };
 }
 
-module.exports = { upsertUser, setUserStatus, assignLearner, unassignLearner, transferLearner };
+const MAX_ASSIGNMENTS = 500;
+
+// OP-32 (FR-26): every advisor-learner relationship, active AND ended, so an
+// Admin can see what exists and what was ended. Read-only: no audit. Optional
+// filters advisorId / learnerId. Active first, then by advisor and learner name.
+async function listAssignments(db, auth, data) {
+  await requireAdmin(db, auth);
+  let q = db.collection("advisorAssignments");
+  const advisorId = requireText(data?.advisorId);
+  const learnerId = requireText(data?.learnerId);
+  if (advisorId) q = q.where("advisorId", "==", advisorId);
+  if (learnerId) q = q.where("learnerId", "==", learnerId);
+  const snap = await q.limit(MAX_ASSIGNMENTS).get();
+  const rank = (status) => (status === "active" ? 0 : 1);
+  return snap.docs
+    .map((d) => {
+      const a = d.data();
+      return {
+        id: d.id,
+        advisorId: a.advisorId,
+        advisorName: a.advisorName ?? null,
+        learnerId: a.learnerId,
+        learnerName: a.learnerName ?? null,
+        status: a.status,
+        source: a.source ?? null,
+        updatedAt: a.updatedAt ? a.updatedAt.toDate().toISOString() : null,
+      };
+    })
+    .sort(
+      (x, y) =>
+        rank(x.status) - rank(y.status) ||
+        String(x.advisorName).localeCompare(String(y.advisorName)) ||
+        String(x.learnerName).localeCompare(String(y.learnerName)),
+    );
+}
+
+module.exports = { upsertUser, setUserStatus, assignLearner, unassignLearner, transferLearner, listAssignments };

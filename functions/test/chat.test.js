@@ -269,3 +269,53 @@ test("lock lives in reviewLocks (Timestamp expiry), never on the chatMessages do
   // the token must never be on the message document that reviewers can read directly
   assert.equal(JSON.stringify(await msg(id)).includes("token"), false);
 });
+
+test("approving or rejecting changes only status and decision, never content or sender", async () => {
+  for (const outcome of ["approve", "reject"]) {
+    const id = await sent(S1, "ข้อความที่ต้องไม่ถูกแก้ " + outcome);
+    const before = await msg(id);
+    const { token } = await chat.lockMessage(db, R1, { messageId: id }, { now: at(0) });
+    await chat.decideMessage(db, R1, { messageId: id, token, outcome, negative: false, reason: outcome === "reject" ? "เหตุผล" : undefined }, { now: at(1) });
+    const after = await msg(id);
+    const { status: s0, decision: d0, ...rest0 } = before;
+    const { status: s1, decision: d1, ...rest1 } = after;
+    assert.deepEqual(rest1, rest0, "no field other than status and decision may change");
+    assert.equal(rest1.senderId, "stu-1");
+    assert.equal(s0, "pending");
+    assert.equal(s1, outcome === "approve" ? "approved" : "rejected");
+    assert.deepEqual(Object.keys(d1).sort(), ["at", "negative", "outcome", "reason", "reviewerId"]);
+    assert.equal(d0, undefined);
+  }
+});
+
+test("listMyMessages returns only the caller's messages with status and the rejection reason, nothing about the reviewer", async () => {
+  const pending = await sent(S1, "ยังรออยู่");
+  const approved = await sent(S1, "ผ่านแล้ว");
+  const rejected = await sent(S1, "ถูกปฏิเสธ");
+  // stu-2 is not eligible in this fixture, so write the other sender's message directly
+  await db.collection("chatMessages").add({ senderId: "stu-2", senderName: "Student 2", content: "ของคนอื่น", status: "pending", sentAt: Timestamp.fromDate(at(0)), resubmitOfId: null });
+  for (const [id, outcome, reason] of [[approved, "approve", undefined], [rejected, "reject", "ไม่เหมาะสม"]]) {
+    const { token } = await chat.lockMessage(db, R1, { messageId: id }, { now: at(0) });
+    await chat.decideMessage(db, R1, { messageId: id, token, outcome, negative: true, reason }, { now: at(1) });
+  }
+  const list = await chat.listMyMessages(db, S1, {});
+  assert.deepEqual(list.map((m) => m.id).sort(), [pending, approved, rejected].sort());
+  const by = Object.fromEntries(list.map((m) => [m.id, m]));
+  assert.equal(by[pending].status, "pending");
+  assert.equal(by[pending].reason, null);
+  assert.equal(by[approved].status, "approved");
+  assert.equal(by[approved].reason, null);
+  assert.equal(by[rejected].status, "rejected");
+  assert.equal(by[rejected].reason, "ไม่เหมาะสม");
+  for (const m of list) {
+    assert.deepEqual(Object.keys(m).sort(), ["content", "id", "reason", "resubmitOfId", "sentAt", "status"]);
+  }
+  assert.equal(by[rejected].content, "ถูกปฏิเสธ");
+});
+
+test("listMyMessages is for students only and validates limit", async () => {
+  assert.equal(await code(chat.listMyMessages(db, R1, {})), "permission-denied");
+  assert.equal(await code(chat.listMyMessages(db, null, {})), "unauthenticated");
+  assert.equal(await code(chat.listMyMessages(db, S1, { limit: 0 })), "invalid-argument");
+  assert.deepEqual(await chat.listMyMessages(db, S1, {}), []);
+});

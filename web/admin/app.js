@@ -218,6 +218,48 @@ function assignAction(op) {
   return call.transferLearner({ learnerId, fromAdvisorId: advisorId, toAdvisorId: to });
 }
 
+// ---- existing advisor-learner relationships (OP-32): active and ended ----
+const ASSIGN_STATUS = { active: "ใช้งาน", ended: "ยุติแล้ว" };
+
+function nameWithId(name, id) {
+  return name ? `${name} (${id})` : id;
+}
+
+async function loadAssignments() {
+  setStatus("assignListStatus", "", "");
+  try {
+    const rows = (await call.listAssignments({})).data;
+    const body = $("assignBody");
+    body.replaceChildren();
+    for (const r of rows) {
+      const tr = document.createElement("tr");
+      tr.className = r.status;
+      const cells = [nameWithId(r.advisorName, r.advisorId), nameWithId(r.learnerName, r.learnerId)];
+      for (const text of cells) {
+        const td = document.createElement("td");
+        td.textContent = text;
+        tr.appendChild(td);
+      }
+      const statusTd = document.createElement("td");
+      const badge = document.createElement("span");
+      badge.className = `badge ${r.status}`;
+      badge.textContent = ASSIGN_STATUS[r.status] ?? r.status;
+      statusTd.appendChild(badge);
+      tr.appendChild(statusTd);
+      for (const text of [r.source ?? "-", formatTime(r.updatedAt)]) {
+        const td = document.createElement("td");
+        td.textContent = text;
+        tr.appendChild(td);
+      }
+      body.appendChild(tr);
+    }
+    if (rows.length === 0) setStatus("assignListStatus", "ยังไม่มีความสัมพันธ์ครู-ผู้เรียน", "");
+  } catch (err) {
+    console.error(err);
+    setStatus("assignListStatus", errorText(err), "error");
+  }
+}
+
 // ---- history ----
 const compact = (v) => (v === null || v === undefined ? "-" : JSON.stringify(v));
 
@@ -279,6 +321,7 @@ async function loadAll() {
     console.error(err);
     setStatus("importStatus", errorText(err), "error");
   }
+  await loadAssignments();
   await loadHistory();
 }
 
@@ -307,7 +350,7 @@ async function main() {
   }
   for (const name of [
     "getSystemPolicy", "setSystemPolicy", "upsertUser", "assignLearner",
-    "unassignLearner", "transferLearner", "listChangeAudits",
+    "unassignLearner", "transferLearner", "listAssignments", "listChangeAudits",
     "listThresholds", "setThreshold", "runRiskAssessment", "importLearningData", "listSyncRuns",
   ]) call[name] = httpsCallable(functions, name);
 
@@ -368,9 +411,13 @@ async function main() {
     b.addEventListener("click", async () => {
       if (b.dataset.op === "unassign" && !window.confirm("ยืนยันยุติความสัมพันธ์ครู-ผู้เรียนนี้หรือไม่?")) return;
       const ok = await attempt("assignStatus", async () => assignAction(b.dataset.op), "ดำเนินการแล้ว");
-      if (ok) await loadHistory();
+      if (ok) {
+        await loadAssignments();
+        await loadHistory();
+      }
     });
   }
+  $("aReload").addEventListener("click", loadAssignments);
   $("hReload").addEventListener("click", loadHistory);
   $("hCategory").addEventListener("change", loadHistory);
 

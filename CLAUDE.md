@@ -35,8 +35,8 @@ npm run emulators                                           # เปิด emula
 ### โครงสร้างโฟลเดอร์
 - `web/login/` หน้าเข้าสู่ระบบ/สมัครบัญชี (Firebase Auth) ทุกหน้าอื่นเด้งมาที่นี่ถ้าไม่ล็อกอิน และหลังล็อกอินไปหน้าตามบทบาท (admin → `admin/`, lecturer → `review-queue/`, นอกนั้น → `dashboard/`) เรียก `registerSelf`/`getMyProfile`
 - `web/shared/nav.js` ฟังก์ชันนำทางที่หน้าต่าง ๆ ใช้ร่วมกัน (`homeFor`, `goHome`, `goToLogin` คง hash `#emulator`) ทุกหน้าต้อง serve จาก `web/` เพราะ import ข้ามโฟลเดอร์
-- `web/admin/` หน้า Admin: นโยบายระบบ, กฎ threshold, นำเข้าข้อมูลการเรียน, บัญชีและบทบาท, ความสัมพันธ์ครู-ผู้เรียน (กำหนด/ยุติ/โอน), ประวัติการเปลี่ยนแปลง
-- `web/dashboard/` หน้าผู้เรียน (ดูสถานการณ์การเรียนของตน) และครูที่ปรึกษา (ดูผู้เรียนในความดูแล อ่านอย่างเดียว)
+- `web/admin/` หน้า Admin: นโยบายระบบ, กฎ threshold, นำเข้าข้อมูลการเรียน, บัญชีและบทบาท, ความสัมพันธ์ครู-ผู้เรียน (กำหนด/ยุติ/โอน + ตารางความสัมพันธ์ที่มีอยู่ทั้ง `active` และ `ended` จาก `listAssignments`), ประวัติการเปลี่ยนแปลง
+- `web/dashboard/` หน้าผู้เรียน (ดูสถานการณ์การเรียนของตน) และครูที่ปรึกษา (ดูผู้เรียนในความดูแล อ่านอย่างเดียว) บัญชีที่มีบทบาท `student` เห็นฟอร์มส่งข้อความแนะนำ (`sendMessage`) และรายการข้อความของตน (`listMyMessages`: สถานะ + เหตุผลถ้าถูกปฏิเสธ ไม่มีข้อมูลผู้ตรวจ) ฟอร์มตัดสินว่าแสดงหรือไม่จาก `getMyProfile`
 - `web/review-queue/` หน้าผู้ตรวจ (lecturer/admin): ล็อกข้อความ ระบุเชิงลบ/ไม่เชิงลบ อนุมัติ/ปฏิเสธ ปลดล็อก และเก็บ `firebase-config.js` ที่สามหน้าใช้ร่วมกัน
 - `functions/lib/` logic ทั้งหมดของ backend แยกตามเรื่อง: `access` (สิทธิ์), `accounts`, `register` (สมัครเอง/อ่านโปรไฟล์ตน), `chat`, `sync`, `risk`, `thresholds`, `policy`, `situation`, `learners`, `history`, `audit`, `errors`, `migrate-locks`
 - `firebase/firestore.rules` Security Rules (ทดสอบใน `functions/test/rules.test.js`)
@@ -76,7 +76,8 @@ npm run emulators                                           # เปิด emula
 
 ### ข้อห้าม
 - หน้าเว็บห้ามเขียน Firestore ตรง ต้องผ่าน callable function เท่านั้น (Rules ปฏิเสธการเขียนทุกอย่างอยู่แล้ว) และหน้าเว็บอ่าน `users` ตรงไม่ได้ ใช้ `getMyProfile` อ่านโปรไฟล์ตนเอง
-- `registerSelf` รับแค่ `name` ห้ามรับ role/status/uid จาก client และห้ามเขียนทับ `users/{uid}` ที่มีอยู่ (สมัครเองได้เฉพาะ `student`)
+- `registerSelf` รับแค่ `name` ห้ามรับ role/status/uid จาก client และห้ามเขียนทับ `users/{uid}` ที่มีอยู่ (สมัครเองได้เฉพาะ `student`) สมัครซ้ำตอบ `{result: "exists"}` ไม่ใช่ error และไม่บันทึก audit; `getMyProfile` ตอบ `not-found` เมื่อยังไม่มีบัญชี และ `permission-denied` เมื่อบัญชีถูกปิด
+- `decideMessage` แก้ได้แค่ `status` กับ `decision` ของข้อความ ห้ามแตะ `content`, `senderId`, `senderName`, `sentAt`, `resubmitOfId` (มีเทสต์ใน `chat.test.js` คุมไว้)
 - ห้าม commit `web/review-queue/firebase-config.js`, ไฟล์ `.env`/`.env.*` และ service account key (`.gitignore` ครอบคลุม `firebase-config.js`, `serviceAccount*.json`, `*.json.key` แต่**ยังไม่ครอบคลุม `.env`**)
 - ห้ามแก้ `firebase/firestore.rules` ให้หลวมลง (เช่น ให้ client เขียนได้ หรือให้ `student` อ่าน `chatMessages` ตรง) ต้องผ่าน `functions/test/rules.test.js` และบอกผู้ใช้ก่อนเสมอ
 - ข้อความที่ `rejected` ห้ามแก้ ปิดถาวร ผู้ส่งต้องสร้างข้อความใหม่ผ่าน `resubmitMessage` (ครั้งละหนึ่ง)

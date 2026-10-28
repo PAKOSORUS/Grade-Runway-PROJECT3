@@ -1,6 +1,6 @@
 # User Journey
 
-แมปฟีเจอร์ใน [[feature-list]] เป็น flow การใช้งานตามบทบาท (รหัสอ้างอิง spec: [[../01-requirements/01-spec/20261014-01-student-risk-alert|REQ-01]], [[../01-requirements/01-spec/20261014-02-peer-advice-chat|REQ-02]], [[../01-requirements/01-spec/20261016-01-sync-failure-handling|REQ-03]], [[../01-requirements/01-spec/20261016-02-peer-chat-recipients-lock-resubmit|REQ-04]], [[../01-requirements/01-spec/20261016-03-first-sync-failure-and-expired-lock-decision|REQ-05]], [[../01-requirements/01-spec/20261017-01-user-role-advisor-eligibility-management|REQ-06]])
+แมปฟีเจอร์ใน [[feature-list]] เป็น flow การใช้งานตามบทบาท (รหัสอ้างอิง spec: [[../01-requirements/01-spec/20261014-01-student-risk-alert|REQ-01]], [[../01-requirements/01-spec/20261014-02-peer-advice-chat|REQ-02]], [[../01-requirements/01-spec/20261016-01-sync-failure-handling|REQ-03]], [[../01-requirements/01-spec/20261016-02-peer-chat-recipients-lock-resubmit|REQ-04]], [[../01-requirements/01-spec/20261016-03-first-sync-failure-and-expired-lock-decision|REQ-05]], [[../01-requirements/01-spec/20261017-01-user-role-advisor-eligibility-management|REQ-06]], [[../01-requirements/01-spec/20261027-01-self-registration-and-login|REQ-07]])
 
 ## Journey: ผู้ดูแลระบบตั้งค่าการเชื่อมต่อและ threshold
 บทบาท: ผู้ดูแลระบบ
@@ -216,3 +216,56 @@ flowchart TD
 6. ตั้งเกณฑ์ผู้ผ่านเกณฑ์ (องค์ประกอบของเกณฑ์ยังไม่กำหนด) — [[20261017-01-user-role-advisor-eligibility-management|FR-27]]
 7. ระบบประเมินสิทธิ์นักศึกษาใหม่ตามเกณฑ์และข้อมูลซิงก์ ผลใช้ตัดสินสิทธิ์ส่งข้อความ — [[20261017-01-user-role-advisor-eligibility-management|FR-27]], [[20261014-02-peer-advice-chat|FR-16]]
 8. ระบบบันทึกประวัติการเปลี่ยนแปลง (ผู้ทำ เวลา ค่าก่อน-หลัง) — [[20261017-01-user-role-advisor-eligibility-management|NFR-07]]
+
+## Journey: ผู้ใช้ใหม่สมัครบัญชีด้วยตนเอง
+บทบาท: ผู้สมัครใหม่ (กลายเป็นนักศึกษา)
+
+```mermaid
+flowchart TD
+    A["เปิดหน้า login แล้วเลือกสมัคร กรอกชื่อ อีเมล รหัสผ่าน (FR-28)"] --> B{"มีบัญชีผู้ใช้ของ uid นี้อยู่แล้ว?"}
+    B -->|มี| C["ระบบไม่เขียนทับบัญชีเดิม ข้อมูลเดิมไม่เปลี่ยน (FR-28)"]
+    B -->|ไม่มี| D["ระบบสร้างบัญชีด้วยบทบาท student สถานะใช้งาน เพิกเฉยบทบาทที่ส่งมา (FR-28)"]
+    D --> E["ระบบบันทึกประวัติการสมัครเอง (NFR-07)"]
+    E --> F["เข้าสู่ระบบและถูกพาไปแดชบอร์ด (FR-29)"]
+    C --> F
+```
+
+1. เปิดหน้า login เลือกสมัคร กรอกชื่อ อีเมล และรหัสผ่าน (เลือกบทบาทเองไม่ได้) — [[20261027-01-self-registration-and-login|FR-28]]
+2. ตัดสินว่ามีบัญชีผู้ใช้ของ uid นี้อยู่แล้วหรือไม่ ถ้ามีไปขั้นที่ 3 ถ้าไม่มีไปขั้นที่ 4
+3. ระบบไม่เขียนทับบัญชีเดิม (บทบาท สถานะเดิมไม่เปลี่ยน) แล้วไปขั้นที่ 6 — [[20261027-01-self-registration-and-login|FR-28]]
+4. ระบบสร้างบัญชีผู้ใช้ฝั่งระบบด้วยบทบาท student เพียงบทบาทเดียวและสถานะใช้งาน ค่าบทบาทที่ผู้สมัครส่งมาถูกเพิกเฉย — [[20261027-01-self-registration-and-login|FR-28]]
+5. ระบบบันทึกประวัติการสมัครเอง (ผู้ทำ = uid ผู้สมัคร เวลา ค่าที่สร้าง แหล่งที่มา = สมัครเอง) — [[20261017-01-user-role-advisor-eligibility-management|NFR-07]]
+6. เข้าสู่ระบบและถูกพาไปแดชบอร์ด (ต้องผ่านเกณฑ์ตาม FR-27 จึงจะส่งข้อความได้) — [[20261027-01-self-registration-and-login|FR-29]]
+
+## Journey: ผู้ใช้ทุกบทบาทเข้าสู่ระบบ ใช้งาน และออกจากระบบ
+บทบาท: ผู้ใช้ทุกบทบาท (นักศึกษา, ครู/อาจารย์ที่ปรึกษา, อาจารย์, Admin)
+
+```mermaid
+flowchart TD
+    A["เข้าหน้าภายในโดยยังไม่ล็อกอิน (FR-30)"] --> B["ถูกพาไปหน้า login (FR-30)"]
+    B --> C["เข้าสู่ระบบด้วยอีเมล/รหัสผ่าน (FR-29)"]
+    C --> D{"บัญชีเปิดใช้งานอยู่?"}
+    D -->|ปิดใช้งาน| X["เข้าใช้งานไม่ได้ จบ (FR-29)"]
+    D -->|ใช้งาน| E["ระบบอ่านบทบาทของตนเอง (FR-29)"]
+    E --> F{"บทบาทสูงสุดของผู้ใช้?"}
+    F -->|Admin| G["ไปหน้า Admin (FR-29)"]
+    F -->|อาจารย์| H["ไปหน้าผู้ตรวจ (FR-29)"]
+    F -->|อื่นๆ| I["ไปแดชบอร์ด (FR-29)"]
+    G --> J["ใช้งาน และรายการที่สร้างใหม่บันทึก uid ผู้สร้าง (FR-31)"]
+    H --> J
+    I --> J
+    J --> K["กดออกจากระบบ (FR-30)"]
+    K --> B
+```
+
+1. เข้าหน้าภายในโดยยังไม่ล็อกอิน — [[20261027-01-self-registration-and-login|FR-30]]
+2. ระบบพาไปหน้า login — [[20261027-01-self-registration-and-login|FR-30]]
+3. เข้าสู่ระบบด้วยอีเมล/รหัสผ่าน — [[20261027-01-self-registration-and-login|FR-29]]
+4. ตัดสินว่าบัญชียังเปิดใช้งานหรือไม่ ถ้าปิดใช้งานเข้าไม่ได้และจบ ถ้าใช้งานไปขั้นที่ 5 — [[20261027-01-self-registration-and-login|FR-29]]
+5. ระบบอ่านบทบาทและสถานะของตนเอง (อ่านอย่างเดียว เฉพาะข้อมูลตน) — [[20261027-01-self-registration-and-login|FR-29]]
+6. ตัดสินหน้าปลายทางตามลำดับบทบาท Admin → อาจารย์ → อื่นๆ — Admin ไปขั้นที่ 7, อาจารย์ไปขั้นที่ 8, อื่นๆ ไปขั้นที่ 9 — [[20261027-01-self-registration-and-login|FR-29]]
+7. ไปหน้า Admin แล้วไปขั้นที่ 10 — [[20261027-01-self-registration-and-login|FR-29]]
+8. ไปหน้าผู้ตรวจ แล้วไปขั้นที่ 10 — [[20261027-01-self-registration-and-login|FR-29]]
+9. ไปแดชบอร์ด (นักศึกษาและครู/อาจารย์ที่ปรึกษา) แล้วไปขั้นที่ 10 — [[20261027-01-self-registration-and-login|FR-29]]
+10. ใช้งานตามบทบาท รายการที่สร้างใหม่บันทึก uid ของผู้สร้างจากตัวตนที่ยืนยันแล้ว — [[20261027-01-self-registration-and-login|FR-31]]
+11. กดปุ่มออกจากระบบ (มีทุกหน้า) สิ้นสุดเซสชัน แล้วกลับไปขั้นที่ 2 — [[20261027-01-self-registration-and-login|FR-30]]
