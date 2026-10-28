@@ -319,3 +319,52 @@ test("listMyMessages is for students only and validates limit", async () => {
   assert.equal(await code(chat.listMyMessages(db, S1, { limit: 0 })), "invalid-argument");
   assert.deepEqual(await chat.listMyMessages(db, S1, {}), []);
 });
+
+test("an account that is both student and lecturer cannot lock or decide its own message, but reviews others normally", async () => {
+  for (const [uid, roles] of [["dual-1", ["student", "lecturer"]], ["dual-2", ["student", "admin"]]]) {
+    await db.collection("users").doc(uid).set({ name: uid, status: "active", roles });
+    await db.collection("eligibilityResults").doc(uid).set({ eligible: true });
+    const D = { uid };
+    const own = await sent(D, "ข้อความของผู้ตรวจเอง " + uid);
+    const other = await sent(S1, "ข้อความของนักศึกษาคนอื่น " + uid);
+
+    // lock: refused, no lock and no audit event are created
+    const lockEvents = (await events("lock")).length;
+    assert.equal(await code(chat.lockMessage(db, D, { messageId: own }, { now: at(0) })), "permission-denied");
+    assert.equal(await lockOf(own), undefined);
+    assert.equal((await events("lock")).length, lockEvents);
+
+    // decide: refused even if a live lock for this caller somehow exists
+    await db.collection("reviewLocks").doc(own).set({ holderId: uid, token: "t-own", expiresAt: Timestamp.fromDate(at(30)) });
+    const decisions = (await events("review_decision")).length;
+    for (const outcome of ["approve", "reject"]) {
+      assert.equal(
+        await code(chat.decideMessage(db, D, { messageId: own, token: "t-own", outcome, negative: false, reason: "x" }, { now: at(1) })),
+        "permission-denied",
+      );
+    }
+    const m = await msg(own);
+    assert.equal(m.status, "pending");
+    assert.equal(m.decision, undefined);
+    assert.equal((await events("review_decision")).length, decisions);
+    await db.collection("reviewLocks").doc(own).delete();
+
+    // the queue still lists the own message, flagged; someone else's is not flagged
+    const queue = await chat.listReviewQueue(db, D, {}, { now: at(2) });
+    assert.equal(queue.find((q) => q.id === own).ownMessage, true);
+    assert.equal(queue.find((q) => q.id === other).ownMessage, false);
+
+    // reviewing another student's message works as usual
+    const { token } = await chat.lockMessage(db, D, { messageId: other }, { now: at(3) });
+    const res = await chat.decideMessage(db, D, { messageId: other, token, outcome: "approve", negative: false }, { now: at(4) });
+    assert.equal(res.status, "approved");
+  }
+});
+
+test("a lecturer who never sent the message is not affected by the self-review rule", async () => {
+  const id = await sent(S1, "ปกติ");
+  const queue = await chat.listReviewQueue(db, R1, {}, { now: at(0) });
+  assert.equal(queue.find((q) => q.id === id).ownMessage, false);
+  const { token } = await chat.lockMessage(db, R1, { messageId: id }, { now: at(1) });
+  assert.equal((await chat.decideMessage(db, R1, { messageId: id, token, outcome: "approve", negative: true }, { now: at(2) })).status, "approved");
+});

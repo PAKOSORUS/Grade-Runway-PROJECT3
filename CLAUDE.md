@@ -77,6 +77,7 @@ npm run emulators                                           # เปิด emula
 ### ข้อห้าม
 - หน้าเว็บห้ามเขียน Firestore ตรง ต้องผ่าน callable function เท่านั้น (Rules ปฏิเสธการเขียนทุกอย่างอยู่แล้ว) และหน้าเว็บอ่าน `users` ตรงไม่ได้ ใช้ `getMyProfile` อ่านโปรไฟล์ตนเอง
 - `registerSelf` รับแค่ `name` ห้ามรับ role/status/uid จาก client และห้ามเขียนทับ `users/{uid}` ที่มีอยู่ (สมัครเองได้เฉพาะ `student`) สมัครซ้ำตอบ `{result: "exists"}` ไม่ใช่ error และไม่บันทึก audit; `getMyProfile` ตอบ `not-found` เมื่อยังไม่มีบัญชี และ `permission-denied` เมื่อบัญชีถูกปิด
+- ผู้ตรวจห้ามตรวจข้อความที่ตัวเองส่ง: `lockMessage`/`decideMessage` ปฏิเสธ (`permission-denied`) เมื่อ `senderId` ตรงกับผู้เรียก ไม่ว่าถือบทบาทอะไร (`listReviewQueue` ส่ง `ownMessage` ให้หน้าจอปิดปุ่มล็อก)
 - `decideMessage` แก้ได้แค่ `status` กับ `decision` ของข้อความ ห้ามแตะ `content`, `senderId`, `senderName`, `sentAt`, `resubmitOfId` (มีเทสต์ใน `chat.test.js` คุมไว้)
 - ห้าม commit `web/review-queue/firebase-config.js`, ไฟล์ `.env`/`.env.*` และ service account key (`.gitignore` ครอบคลุม `firebase-config.js`, `serviceAccount*.json`, `*.json.key` แต่**ยังไม่ครอบคลุม `.env`**)
 - ห้ามแก้ `firebase/firestore.rules` ให้หลวมลง (เช่น ให้ client เขียนได้ หรือให้ `student` อ่าน `chatMessages` ตรง) ต้องผ่าน `functions/test/rules.test.js` และบอกผู้ใช้ก่อนเสมอ

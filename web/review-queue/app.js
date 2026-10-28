@@ -178,7 +178,12 @@ function render(items) {
     errorBox.dataset.errorFor = item.id;
 
     const lock = locks.get(item.id);
-    if (lock && item.lockedByMe) {
+    if (item.ownMessage) {
+      // the caller sent this message: it is listed but cannot be locked or decided
+      const own = button("ล็อกเพื่อตรวจ", () => {}, "primary");
+      own.disabled = true;
+      card.append(own, el("p", "muted", "ข้อความของคุณเอง ตรวจไม่ได้"));
+    } else if (lock && item.lockedByMe) {
       card.appendChild(decisionForm(item, lock, errorBox));
     } else {
       if (item.lockedByMe) {

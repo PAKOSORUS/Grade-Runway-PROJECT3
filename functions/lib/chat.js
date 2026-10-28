@@ -17,6 +17,7 @@ const { requireRole } = require("./access");
 const { denied, invalid, missing, conflict } = require("./errors");
 
 const REVIEWERS = ["lecturer", "admin"];
+const SELF_REVIEW = "ตรวจข้อความที่ตัวเองส่งไม่ได้";
 const MAX_CONTENT = 2000;
 // Provisional until the lock duration is set in systemPolicy/current
 // (the spec leaves the value open, FR-21).
@@ -182,6 +183,8 @@ async function listReviewQueue(db, auth, _data, { now = new Date() } = {}) {
         content: m.content,
         sentAt: m.sentAt.toDate().toISOString(),
         resubmitOfId: m.resubmitOfId ?? null,
+        // the reviewer sent this message: it stays visible but cannot be reviewed by them
+        ownMessage: m.senderId === ctx.uid,
         lockedByMe: !!mine,
         lockExpiresAt: mine ? mine.expiresAt.toDate().toISOString() : null,
       };
@@ -202,6 +205,7 @@ async function lockMessage(db, auth, data, { now = new Date() } = {}) {
   await db.runTransaction(async (tx) => {
     const [snap, cur] = await Promise.all([tx.get(ref), tx.get(lockRef)]);
     if (!snap.exists) throw missing("ไม่พบข้อความ");
+    if (snap.data().senderId === ctx.uid) throw denied(SELF_REVIEW);
     if (snap.data().status !== "pending") throw conflict("ข้อความนี้ไม่ได้อยู่ในสถานะรออนุมัติ");
     if (cur.exists && isLockLive(cur.data(), now) && cur.data().holderId !== ctx.uid) {
       throw conflict("ข้อความนี้ถูกผู้ตรวจคนอื่นล็อกอยู่");
@@ -231,6 +235,8 @@ async function decideMessage(db, auth, data, { now = new Date() } = {}) {
     const [snap, lockSnap] = await Promise.all([tx.get(ref), tx.get(lockRef)]);
     if (!snap.exists) throw missing("ไม่พบข้อความ");
     const m = snap.data();
+    // whatever roles the caller holds, a message they sent is never theirs to decide
+    if (m.senderId === ctx.uid) throw denied(SELF_REVIEW);
     const lock = lockSnap.exists ? lockSnap.data() : null;
     const valid = m.status === "pending" && isLockLive(lock, now) && lock.holderId === ctx.uid && lock.token === data.token;
     if (!valid) {
