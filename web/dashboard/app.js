@@ -23,6 +23,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
 
 import { goToLogin } from "../shared/nav.js";
+import { enterPage } from "../shared/guard.js";
 
 const $ = (id) => document.getElementById(id);
 const useEmulator =
@@ -177,20 +178,19 @@ async function loadLearner(learnerId) {
   }
 }
 
-// A user can be a learner, an advisor, or both: offer every learner they may see.
-async function loadAll(user) {
+// A user can be a learner, an advisor, or both: offer every learner they may see,
+// decided by the roles read from the Backend on this load (ACL.md).
+async function loadAll(roles) {
   showMessage("กำลังโหลด…", "info");
   const options = [];
-  try {
-    await call.getLearnerSituation({});
-    options.push({ value: "", label: "ตัวฉันเอง" });
-  } catch {
-    // not a learner: fine
-  }
-  try {
-    for (const l of (await call.listMyLearners({})).data) options.push({ value: l.learnerId, label: l.name });
-  } catch {
-    // not an advisor: fine
+  if (roles.includes("student")) options.push({ value: "", label: "ตัวฉันเอง" });
+  if (roles.includes("advisor")) {
+    try {
+      for (const l of (await call.listMyLearners({})).data) options.push({ value: l.learnerId, label: l.name });
+    } catch (err) {
+      console.error(err);
+      showMessage(`โหลดรายชื่อผู้เรียนที่ดูแลไม่สำเร็จ: ${errorText(err)}`, "error");
+    }
   }
   if (options.length === 0) {
     $("app").hidden = true;
@@ -246,14 +246,8 @@ async function loadMyMessages() {
 }
 
 // The form is shown to student accounts only (the Backend refuses everyone else too).
-async function loadChat() {
+async function loadChat(roles) {
   $("chatApp").hidden = true;
-  let roles = [];
-  try {
-    roles = (await call.getMyProfile({})).data.roles;
-  } catch (err) {
-    console.error(err && err.code);
-  }
   if (!roles.includes("student")) return;
   $("chatApp").hidden = false;
   setSendStatus("", "");
@@ -315,16 +309,20 @@ async function main() {
   $("logout").addEventListener("click", () => signOut(auth));
   $("pick").addEventListener("change", () => loadLearner($("pick").value));
 
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     $("app").hidden = true;
+    $("chatApp").hidden = true;
     if (!user) {
       goToLogin();
       return;
     }
     $("who").hidden = false;
     $("whoText").textContent = user.email ?? user.uid;
-    loadAll(user);
-    loadChat();
+    // roles are read from the Backend on every load (never cached): student or advisor
+    const roles = await enterPage({ page: "dashboard", getProfile: async () => (await call.getMyProfile({})).data, showMessage });
+    if (!roles) return;
+    loadAll(roles);
+    loadChat(roles);
   });
 }
 

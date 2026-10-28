@@ -22,6 +22,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
 
 import { goToLogin } from "../shared/nav.js";
+import { enterPage } from "../shared/guard.js";
 
 const $ = (id) => document.getElementById(id);
 const useEmulator =
@@ -350,7 +351,7 @@ async function main() {
   }
   for (const name of [
     "getSystemPolicy", "setSystemPolicy", "upsertUser", "assignLearner",
-    "unassignLearner", "transferLearner", "listAssignments", "listChangeAudits",
+    "unassignLearner", "transferLearner", "listAssignments", "listChangeAudits", "getMyProfile",
     "listThresholds", "setThreshold", "runRiskAssessment", "importLearningData", "listSyncRuns",
   ]) call[name] = httpsCallable(functions, name);
 
@@ -421,7 +422,7 @@ async function main() {
   $("hReload").addEventListener("click", loadHistory);
   $("hCategory").addEventListener("change", loadHistory);
 
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     $("app").hidden = true;
     if (!user) {
       goToLogin();
@@ -429,7 +430,9 @@ async function main() {
     }
     $("who").hidden = false;
     $("whoText").textContent = user.email ?? user.uid;
-    loadAll();
+    // roles are read from the Backend on every load (never cached): admin only
+    const roles = await enterPage({ page: "admin", getProfile: async () => (await call.getMyProfile({})).data, showMessage });
+    if (roles) loadAll();
   });
 }
 

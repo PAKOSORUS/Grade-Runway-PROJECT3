@@ -25,6 +25,9 @@ const users = [
   { uid: "stu-1", email: "student1@example.test", name: "สมชาย ใจดี", roles: ["student"] },
   { uid: "stu-2", email: "student2@example.test", name: "สมหญิง รักเรียน", roles: ["student"] },
   { uid: "adv-1", email: "advisor1@example.test", name: "อาจารย์ ที่ปรึกษา", roles: ["advisor"] },
+  // for checking the role-based pages and menu (ACL.md)
+  { uid: "dual-1", email: "dual@example.test", name: "ผู้ตรวจ ที่เป็นนักศึกษาด้วย", roles: ["student", "lecturer"] },
+  { uid: "norole-1", email: "norole@example.test", name: "ไม่มี บทบาท", roles: [] },
 ];
 
 const ts = (iso) => Timestamp.fromDate(new Date(iso));
@@ -42,11 +45,13 @@ async function main() {
   }
   await db.collection("eligibilityResults").doc("stu-1").set({ eligible: true, _seed: true });
   await db.collection("eligibilityResults").doc("stu-2").set({ eligible: true, _seed: true });
+  await db.collection("eligibilityResults").doc("dual-1").set({ eligible: true, _seed: true });
 
   const msgs = {
     "msg-a": ["stu-1", "สมชาย ใจดี", "ลองทำโจทย์ย้อนหลังวันละ 1 ชุด จะช่วยให้จับทางข้อสอบได้เร็วขึ้น", "2026-10-14T10:00:00+07:00"],
     "msg-b": ["stu-2", "สมหญิง รักเรียน", "จดสรุปท้ายคาบทุกครั้ง แล้วทบทวนก่อนเข้าเรียนครั้งถัดไป", "2026-10-15T14:30:00+07:00"],
     "msg-c": ["stu-1", "สมชาย ใจดี", "อย่าเสียเวลาอ่านเลย วิชานี้ไม่มีทางผ่านอยู่แล้ว", "2026-10-16T09:15:00+07:00"],
+    "msg-d": ["dual-1", "ผู้ตรวจ ที่เป็นนักศึกษาด้วย", "ข้อความที่ผู้ตรวจส่งเอง (ต้องตรวจเองไม่ได้)", "2026-10-17T11:00:00+07:00"],
   };
   for (const [id, [senderId, senderName, content, at]] of Object.entries(msgs)) {
     await db.collection("chatMessages").doc(id).set({
@@ -72,7 +77,7 @@ async function main() {
     db.collection("riskThresholdRules").doc(id).set({ variable, name, threshold, updatedBy: "rev-2", updatedAt: ts("2026-10-27T09:00:00+07:00"), _seed: true });
   await rule("rule-att", "attendance", "เข้าเรียนต่ำกว่าเกณฑ์", 80);
   await rule("rule-trend", "trend", "เกรดลดลงต่อเนื่อง", 2);
-  console.log("Seeded emulator: reviewer1@example.test / reviewer2@example.test / student1@example.test / student2@example.test / advisor1@example.test");
+  console.log("Seeded emulator: reviewer1@example.test / reviewer2@example.test / student1@example.test / student2@example.test / advisor1@example.test / dual@example.test (student+lecturer) / norole@example.test (no roles)");
   console.log(`Password for all: ${PASSWORD}`);
 }
 

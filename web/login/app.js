@@ -89,7 +89,11 @@ async function main() {
     showMessage("กำลังตรวจสอบบัญชี…", "info");
     try {
       const profile = (await call.getMyProfile({})).data;
-      goHome(profile.roles);
+      if (!goHome(profile.roles)) {
+        await signOut(auth);
+        showMessage("บัญชีนี้ยังไม่มีบทบาทที่เข้าหน้าใดได้ กรุณาติดต่อผู้ดูแลระบบ", "error");
+        $("forms").hidden = false;
+      }
     } catch (err) {
       console.error(err && err.code);
       if (err && err.code === "functions/not-found") {
