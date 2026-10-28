@@ -76,7 +76,7 @@ npm run emulators                                           # เปิด emula
 
 ### ข้อห้าม
 - หน้าเว็บห้ามเขียน Firestore ตรง ต้องผ่าน callable function เท่านั้น (Rules ปฏิเสธการเขียนทุกอย่างอยู่แล้ว) และหน้าเว็บอ่าน `users` ตรงไม่ได้ ใช้ `getMyProfile` อ่านโปรไฟล์ตนเอง
-- `registerSelf` รับแค่ `name` ห้ามรับ role/status/uid จาก client และห้ามเขียนทับ `users/{uid}` ที่มีอยู่ (สมัครเองได้เฉพาะ `student`) สมัครซ้ำตอบ `{result: "exists"}` ไม่ใช่ error และไม่บันทึก audit; `getMyProfile` ตอบ `not-found` เมื่อยังไม่มีบัญชี และ `permission-denied` เมื่อบัญชีถูกปิด
+- `registerSelf` รับแค่ `name` ห้ามรับ role/status/uid จาก client และห้ามเขียนทับ `users/{uid}` ที่มีอยู่ (สมัครเองได้เฉพาะ `student`) สมัครซ้ำตอบ `{result: "exists"}` ไม่ใช่ error และไม่บันทึก audit; `getMyProfile` ตอบ `not-found` พร้อม `details.reason = "no-account"` เมื่อยังไม่มีบัญชี (not-found ที่ไม่มี reason แปลว่าฟังก์ชันไม่ถูก deploy หน้า login ต้องแสดง "ระบบหลังบ้านยังไม่เปิดใช้งาน" ไม่ใช่การ์ดลงทะเบียน) และ `permission-denied` เมื่อบัญชีถูกปิด
 - ปุ่ม/เมนู/รั้วหน้าฝั่งเว็บเป็นแค่ความสะดวก ห้ามถือเป็นการป้องกัน และห้ามเก็บ roles ไว้ใน localStorage/sessionStorage
 - ผู้ตรวจห้ามตรวจข้อความที่ตัวเองส่ง: `lockMessage`/`decideMessage` ปฏิเสธ (`permission-denied`) เมื่อ `senderId` ตรงกับผู้เรียก ไม่ว่าถือบทบาทอะไร (`listReviewQueue` ส่ง `ownMessage` ให้หน้าจอปิดปุ่มล็อก)
 - `decideMessage` แก้ได้แค่ `status` กับ `decision` ของข้อความ ห้ามแตะ `content`, `senderId`, `senderName`, `sentAt`, `resubmitOfId` (มีเทสต์ใน `chat.test.js` คุมไว้)

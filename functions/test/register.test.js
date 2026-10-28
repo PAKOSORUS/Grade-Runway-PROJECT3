@@ -9,6 +9,7 @@ initializeApp({ projectId: "demo-grade-runway" });
 const db = getFirestore();
 
 const code = (p) => p.then(() => null, (e) => e.code);
+const reason = (p) => p.then(() => null, (e) => e.details?.reason ?? null);
 const authOf = (uid, email = `${uid}@example.test`) => ({ uid, token: { email } });
 const userDoc = async (uid) => (await db.collection("users").doc(uid).get()).data();
 const audits = async () => (await db.collection("configChangeAudits").get()).docs.map((d) => d.data());
@@ -115,11 +116,15 @@ test("getMyProfile: unauthenticated, no account (not-found) and disabled (permis
   await db.collection("users").doc("off-1").set({ name: "Off", roles: ["student"], status: "disabled" });
   assert.equal(await code(register.getMyProfile(db, null)), "unauthenticated");
   assert.equal(await code(register.getMyProfile(db, { uid: "ghost" })), "not-found");
+  assert.equal(await reason(register.getMyProfile(db, { uid: "ghost" })), "no-account");
+  // only the no-account case carries a reason: a disabled account does not
+  assert.equal(await reason(register.getMyProfile(db, { uid: "off-1" })), null);
   assert.equal(await code(register.getMyProfile(db, { uid: "off-1" })), "permission-denied");
 });
 
 test("after sign-up completes, getMyProfile succeeds for the new student", async () => {
   assert.equal(await code(register.getMyProfile(db, authOf("late-1"))), "not-found");
+  assert.equal(await reason(register.getMyProfile(db, authOf("late-1"))), "no-account");
   await register.registerSelf(db, authOf("late-1"), { name: "Late" });
   assert.deepEqual(await register.getMyProfile(db, authOf("late-1")), { name: "Late", roles: ["student"], status: "active" });
 });
