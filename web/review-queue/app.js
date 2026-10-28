@@ -22,6 +22,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
 
 import { goToLogin } from "../shared/nav.js";
+import { enterPage } from "../shared/guard.js";
 
 const messageEl = document.getElementById("message");
 const listEl = document.getElementById("list");
@@ -271,13 +272,13 @@ async function main() {
     connectFunctionsEmulator(functions, "127.0.0.1", 5001);
     document.getElementById("mode").hidden = false;
   }
-  for (const name of ["listReviewQueue", "lockMessage", "decideMessage", "releaseLock"]) {
+  for (const name of ["listReviewQueue", "lockMessage", "decideMessage", "releaseLock", "getMyProfile"]) {
     call[name] = httpsCallable(functions, name);
   }
 
   document.getElementById("logout").addEventListener("click", () => signOut(auth));
 
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     locks.clear();
     listEl.replaceChildren();
     if (!user) {
@@ -286,7 +287,9 @@ async function main() {
     }
     whoEl.hidden = false;
     document.getElementById("whoText").textContent = user.email ?? user.uid;
-    loadQueue();
+    // roles are read from the Backend on every load (never cached): lecturer or admin
+    const roles = await enterPage({ page: "review-queue", getProfile: async () => (await call.getMyProfile({})).data, showMessage });
+    if (roles) loadQueue();
   });
 }
 
