@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## สถานะของโปรเจกต์
 
-โปรเจกต์นี้เริ่มมีซอร์สโค้ดแล้ว (backend ที่ `functions/`, หน้าเว็บ prototype ที่ `web/`, สคริปต์ที่ `scripts/` และ `firebase/`) ควบคู่กับพื้นที่เอกสาร requirements/design ใน `docs/` ความคืบหน้าของแต่ละส่วนไม่เท่ากัน ให้ตรวจสถานะจริงของแต่ละไฟล์ก่อนอ้างอิงหรือแก้ไข อย่าเชื่อคำอธิบายสถานะที่เขียนไว้ในเอกสารฉบับเก่า เอกสารชั้น logical (`architecture.md`, `api-spec.md`, `db-spec.md`) ยังตั้งใจเขียนแบบไม่ผูก tech stack ส่วนการตัดสินใจเรื่อง technology และ mapping ไปยัง Firestore อยู่ที่ `docs/02-design/02-technical/technology-stack.md` (ที่เดียว) **ยังไม่ได้ deploy ขึ้น Firebase จริง** ทุกอย่างทดสอบกับ emulator
+โปรเจกต์นี้เริ่มมีซอร์สโค้ดแล้ว (backend ที่ `functions/`, หน้าเว็บ prototype ที่ `web/`, สคริปต์ที่ `scripts/` และ `firebase/`) ควบคู่กับพื้นที่เอกสาร requirements/design ใน `docs/` ความคืบหน้าของแต่ละส่วนไม่เท่ากัน ให้ตรวจสถานะจริงของแต่ละไฟล์ก่อนอ้างอิงหรือแก้ไข อย่าเชื่อคำอธิบายสถานะที่เขียนไว้ในเอกสารฉบับเก่า เอกสารชั้น logical (`architecture.md`, `api-spec.md`, `db-spec.md`) ยังตั้งใจเขียนแบบไม่ผูก tech stack ส่วนการตัดสินใจเรื่อง technology และ mapping ไปยัง Firestore อยู่ที่ `docs/02-design/02-technical/technology-stack.md` (ที่เดียว) **deploy ขึ้น Firebase จริงแล้วเฉพาะ Hosting, Firestore Rules และ Indexes** (`https://grade-runway-project.web.app`, คำสั่ง `firebase deploy --only hosting,firestore:rules,firestore:indexes`) **Cloud Functions ยังไม่ได้ deploy** เพราะโปรเจกต์อยู่แผน Spark จึงทดสอบฟีเจอร์ที่เรียก backend กับ emulator เท่านั้น
 
 ## คำสั่งที่ใช้บ่อย
 
