@@ -75,6 +75,27 @@ async function main() {
   // While the sign-up flow runs, the auth listener must not redirect yet.
   let signingUp = false;
 
+  // A call that fails for a reason other than the Backend's own answers means the
+  // Backend is not reachable or not deployed. Its own answers are the codes below;
+  // not-found only counts as an answer when it says reason "no-account".
+  const APP_CODES = new Set([
+    "functions/invalid-argument",
+    "functions/permission-denied",
+    "functions/unauthenticated",
+    "functions/failed-precondition",
+    "functions/already-exists",
+    "functions/resource-exhausted",
+  ]);
+  const isNoAccount = (err) => err && err.code === "functions/not-found" && err.details && err.details.reason === "no-account";
+  const backendDown = (err) => !isNoAccount(err) && !APP_CODES.has(err && err.code);
+
+  function showBackendDown() {
+    $("forms").hidden = true;
+    $("finishCard").hidden = true;
+    $("backendCard").hidden = false;
+    showMessage("", "info");
+  }
+
   function showFinish(text) {
     $("forms").hidden = true;
     $("finishCard").hidden = false;
@@ -83,8 +104,10 @@ async function main() {
     showMessage("", "info");
   }
 
-  // OP-45: no account yet (not-found) offers sign-up completion; a disabled
-  // account (permission-denied) or any other failure signs out with a message.
+  // OP-45: no account yet (not-found, reason "no-account") offers sign-up
+  // completion; a Backend that cannot be reached shows a card with a sign-out
+  // button; a disabled account (permission-denied) or any other answer signs out
+  // with a message.
   async function enter() {
     showMessage("กำลังตรวจสอบบัญชี…", "info");
     try {
@@ -96,8 +119,12 @@ async function main() {
       }
     } catch (err) {
       console.error(err && err.code);
-      if (err && err.code === "functions/not-found") {
+      if (isNoAccount(err)) {
         showFinish("");
+        return;
+      }
+      if (backendDown(err)) {
+        showBackendDown();
         return;
       }
       await signOut(auth);
@@ -112,15 +139,20 @@ async function main() {
   }
 
   // OP-44: "exists" is a normal answer (nothing was changed), not an error.
+  // Returns "ok", "down" (Backend not reachable: the backend card is shown) or "failed".
   async function registerProfile(name, setStatus) {
     setStatus("กำลังลงทะเบียน…", "");
     try {
       await call.registerSelf({ name });
-      return true;
+      return "ok";
     } catch (err) {
       console.error(err);
+      if (backendDown(err)) {
+        showBackendDown();
+        return "down";
+      }
       setStatus(errorText(err), "error");
-      return false;
+      return "failed";
     }
   }
 
@@ -149,8 +181,8 @@ async function main() {
     }
     const registered = await registerProfile(name, setSignupStatus);
     signingUp = false;
-    if (registered) await enter();
-    else showFinish("สร้างบัญชีล็อกอินแล้ว แต่ลงทะเบียนในระบบไม่สำเร็จ กรอกชื่อแล้วลองอีกครั้ง");
+    if (registered === "ok") await enter();
+    else if (registered === "failed") showFinish("สร้างบัญชีล็อกอินแล้ว แต่ลงทะเบียนในระบบไม่สำเร็จ กรอกชื่อแล้วลองอีกครั้ง");
   });
 
   $("finishForm").addEventListener("submit", async (e) => {
@@ -159,7 +191,12 @@ async function main() {
       $("finishStatus").textContent = text;
       $("finishStatus").className = `status ${kind ?? ""}`;
     };
-    if (await registerProfile($("fName").value.trim(), setStatus)) await enter();
+    if ((await registerProfile($("fName").value.trim(), setStatus)) === "ok") await enter();
+  });
+  $("backendLogout").addEventListener("click", async () => {
+    await signOut(auth);
+    $("backendCard").hidden = true;
+    $("forms").hidden = false;
   });
   $("finishCancel").addEventListener("click", async () => {
     await signOut(auth);
@@ -173,6 +210,8 @@ async function main() {
     if (signingUp) return;
     if (!user) {
       showMessage("", "info");
+      $("backendCard").hidden = true;
+      $("finishCard").hidden = true;
       $("forms").hidden = false;
       return;
     }

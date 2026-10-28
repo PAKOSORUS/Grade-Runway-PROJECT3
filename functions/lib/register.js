@@ -45,12 +45,14 @@ async function registerSelf(db, auth, data) {
 
 // OP-45, read-only: the caller's own profile, so a page can pick the right home
 // page after login (clients cannot read users directly, see firestore.rules).
-// No account yet = not-found (the page then offers sign-up completion);
-// a disabled account = permission-denied.
+// No account yet = not-found with details { reason: "no-account" } (the page then
+// offers sign-up completion; a not-found WITHOUT that reason means the function
+// itself is missing, i.e. the backend is not deployed); a disabled account =
+// permission-denied.
 async function getMyProfile(db, auth) {
   if (!auth || !auth.uid) throw unauthenticated();
   const snap = await db.collection("users").doc(auth.uid).get();
-  if (!snap.exists) throw missing("ยังไม่มีบัญชีผู้ใช้ในระบบ");
+  if (!snap.exists) throw missing("ยังไม่มีบัญชีผู้ใช้ในระบบ", { reason: "no-account" });
   const user = snap.data();
   if (user.status !== "active") throw denied("บัญชีถูกปิดใช้งาน");
   return { name: user.name ?? null, roles: Array.isArray(user.roles) ? user.roles : [], status: user.status };
