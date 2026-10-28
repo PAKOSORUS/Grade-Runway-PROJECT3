@@ -46,5 +46,6 @@ exports.getMyProfile = wrap(register.getMyProfile);
 exports.upsertUser = wrap(accounts.upsertUser);
 exports.setUserStatus = wrap(accounts.setUserStatus);
 exports.assignLearner = wrap(accounts.assignLearner);
+exports.listAssignments = wrap(accounts.listAssignments);
 exports.unassignLearner = wrap(accounts.unassignLearner);
 exports.transferLearner = wrap(accounts.transferLearner);

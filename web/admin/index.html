@@ -61,6 +61,10 @@
     textarea { width: 100%; }
     pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 0.8125rem; }
     .muted { color: var(--color-text-muted); }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.8125rem; font-weight: 600; border: 1px solid; }
+    .badge.active { background: var(--status-ok-bg); border-color: var(--status-ok-line); color: var(--status-ok-text); }
+    .badge.ended { background: var(--color-bg-row-stripe); border-color: var(--color-border); color: var(--color-text-muted); }
+    tr.ended td:not(:nth-child(3)) { color: var(--color-text-muted); }
     #mode { background: var(--status-warn-bg); border: 1px solid var(--status-warn-line); color: var(--status-warn-text); padding: 8px 12px; border-radius: 4px; margin: 0 0 16px; font-size: 0.875rem; }
     #login { display: grid; gap: 12px; max-width: 360px; }
     #who { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; font-size: 0.875rem; }
@@ -191,6 +195,13 @@
           </div>
           <div class="status" id="assignStatus" role="alert"></div>
         </form>
+        <h3 style="margin:16px 0 8px;font-size:1rem">ความสัมพันธ์ที่มีอยู่</h3>
+        <div><button id="aReload" type="button" class="secondary">โหลดใหม่</button></div>
+        <div class="status" id="assignListStatus" role="alert"></div>
+        <table id="assignTable">
+          <thead><tr><th>ครู</th><th>ผู้เรียน</th><th>สถานะ</th><th>แหล่งที่มา</th><th>อัปเดตล่าสุด</th></tr></thead>
+          <tbody id="assignBody"></tbody>
+        </table>
       </section>
 
       <section class="card" aria-labelledby="h-history">
