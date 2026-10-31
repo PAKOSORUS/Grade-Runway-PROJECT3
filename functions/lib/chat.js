@@ -7,6 +7,10 @@
 //   sentAt, resubmitOfId, criteriaId
 //   (the review lock is NOT stored here: see reviewLocks below)
 //   decision { reviewerId, outcome, negative, reason, at }   set once
+//   aiSuggestion { topic, cautions[], addressedPreviousReason }, aiSuggestionAt, aiSuggestionBy
+//     latest AI summary shown to reviewers only (overwritten by saveAiSummary)
+// Subcollection chatMessages/{id}/aiLog: one document per AI call (input, output, model,
+// savedBy, createdAt), never overwritten. No Firestore rule matches it, so every client is denied.
 // Collection reviewLocks/{messageId}: { holderId, token, expiresAt }, present only
 // while locked. Kept apart from chatMessages because reviewers may read
 // chatMessages directly under the Firestore rules, and the token must not be
@@ -19,6 +23,9 @@ const { denied, invalid, missing, conflict } = require("./errors");
 const REVIEWERS = ["lecturer", "admin"];
 const SELF_REVIEW = "ตรวจข้อความที่ตัวเองส่งไม่ได้";
 const MAX_CONTENT = 2000;
+const MAX_AI_FIELD = 300;
+const MAX_AI_CAUTIONS = 5;
+const MAX_AI_OUTPUT = 5000;
 // Provisional until the lock duration is set in systemPolicy/current
 // (the spec leaves the value open, FR-21).
 const DEFAULT_LOCK_MINUTES = 15;
@@ -172,17 +179,31 @@ async function listReviewQueue(db, auth, _data, { now = new Date() } = {}) {
   ]);
   const live = new Map();
   for (const l of lockSnap.docs) if (isLockLive(l.data(), now)) live.set(l.id, l.data());
-  return snap.docs
-    .filter((d) => !live.has(d.id) || live.get(d.id).holderId === ctx.uid)
+  const visible = snap.docs.filter((d) => !live.has(d.id) || live.get(d.id).holderId === ctx.uid);
+  // A resubmission carries the rejected original and its reason, so the reviewer (and
+  // the AI summary) can check whether the reason was addressed. Only content and reason:
+  // the original has the same sender, so no identity is added.
+  const originalIds = [...new Set(visible.map((d) => d.data().resubmitOfId).filter(Boolean))];
+  const originals = new Map();
+  if (originalIds.length > 0) {
+    for (const o of await db.getAll(...originalIds.map((id) => messages(db).doc(id)))) {
+      if (o.exists) originals.set(o.id, o.data());
+    }
+  }
+  return visible
     .map((d) => {
       const m = d.data();
       const mine = live.get(d.id);
+      const orig = m.resubmitOfId ? originals.get(m.resubmitOfId) : null;
       return {
         id: d.id,
         senderName: m.senderName,
         content: m.content,
         sentAt: m.sentAt.toDate().toISOString(),
         resubmitOfId: m.resubmitOfId ?? null,
+        previous: orig ? { content: orig.content, reason: orig.decision?.reason ?? null } : null,
+        aiSuggestion: m.aiSuggestion ?? null,
+        aiSuggestionAt: m.aiSuggestionAt ? m.aiSuggestionAt.toDate().toISOString() : null,
         // the reviewer sent this message: it stays visible but cannot be reviewed by them
         ownMessage: m.senderId === ctx.uid,
         lockedByMe: !!mine,
@@ -291,6 +312,95 @@ async function releaseLock(db, auth, data) {
   return { messageId };
 }
 
+// The AI summary for a locked message. Only the lock holder (with the live token) may
+// save it, mirroring decideMessage. It writes aiSuggestion* on the message (latest summary,
+// overwritten) and one aiLog entry per call (never overwritten) with exactly what was sent
+// to the AI; status and decision are never touched. `summary` may be null when the AI's
+// reply was unusable: the call is still logged, aiSuggestion is left as it was.
+// The Backend cannot prove the text came from an AI, so shape and size are validated only.
+const isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+const onlyKeys = (v, keys) => Object.keys(v).every((k) => keys.includes(k));
+const text = (v, max) => typeof v === "string" && v.length <= max;
+
+function cleanAiSummary(summary) {
+  if (summary === null) return null;
+  const ok =
+    isObject(summary) &&
+    onlyKeys(summary, ["topic", "cautions", "addressedPreviousReason"]) &&
+    text(summary.topic, MAX_AI_FIELD) &&
+    summary.topic.trim() &&
+    Array.isArray(summary.cautions) &&
+    summary.cautions.length <= MAX_AI_CAUTIONS &&
+    summary.cautions.every((c) => text(c, MAX_AI_FIELD)) &&
+    (summary.addressedPreviousReason === null || typeof summary.addressedPreviousReason === "boolean");
+  if (!ok) throw invalid("summary ไม่อยู่ในรูปแบบที่กำหนด");
+  return {
+    topic: summary.topic.trim(),
+    cautions: summary.cautions.map((c) => c.trim()).filter(Boolean),
+    addressedPreviousReason: summary.addressedPreviousReason,
+  };
+}
+
+// input is stored as the record of what the AI saw, so it may hold message text only:
+// any other key (senderName, senderId, ...) is refused rather than dropped.
+function cleanAiInput(input) {
+  const ok =
+    isObject(input) &&
+    onlyKeys(input, ["content", "previous"]) &&
+    text(input.content, MAX_CONTENT) &&
+    input.content.trim() &&
+    (input.previous === undefined ||
+      (isObject(input.previous) &&
+        onlyKeys(input.previous, ["content", "reason"]) &&
+        text(input.previous.content, MAX_CONTENT) &&
+        text(input.previous.reason, MAX_CONTENT)));
+  if (!ok) throw invalid("input ต้องมีเฉพาะ content และ previous (content, reason)");
+  return input.previous === undefined
+    ? { content: input.content }
+    : { content: input.content, previous: { content: input.previous.content, reason: input.previous.reason } };
+}
+
+async function saveAiSummary(db, auth, data, { now = new Date() } = {}) {
+  const ctx = await requireRole(db, auth, REVIEWERS);
+  const messageId = typeof data?.messageId === "string" ? data.messageId.trim() : "";
+  if (!messageId) throw invalid("ต้องระบุ messageId");
+  if (typeof data?.token !== "string" || !data.token) throw invalid("ต้องแนบ token ของล็อก");
+  const summary = cleanAiSummary(data.summary === undefined ? undefined : data.summary);
+  const input = cleanAiInput(data.input);
+  if (!text(data.output, MAX_AI_OUTPUT)) throw invalid("output ต้องเป็นข้อความไม่เกิน " + MAX_AI_OUTPUT + " ตัวอักษร");
+  if (!text(data.model, 100) || !data.model.trim()) throw invalid("ต้องระบุ model");
+
+  const ref = messages(db).doc(messageId);
+  const lockRef = locks(db).doc(messageId);
+  await db.runTransaction(async (tx) => {
+    const [snap, lockSnap] = await Promise.all([tx.get(ref), tx.get(lockRef)]);
+    if (!snap.exists) throw missing("ไม่พบข้อความ");
+    const m = snap.data();
+    if (m.senderId === ctx.uid) throw denied(SELF_REVIEW);
+    const lock = lockSnap.exists ? lockSnap.data() : null;
+    if (m.status !== "pending" || !isLockLive(lock, now) || lock.holderId !== ctx.uid || lock.token !== data.token) {
+      throw conflict("บันทึกสรุป AI ไม่ได้: ไม่ได้ถือล็อกที่ใช้ได้ (หมดเวลา ถูกปลด หรือผู้อื่นล็อกต่อ)");
+    }
+    if (summary) {
+      // only these three fields: status and decision stay exactly as they are
+      tx.update(ref, {
+        aiSuggestion: summary,
+        aiSuggestionAt: FieldValue.serverTimestamp(),
+        aiSuggestionBy: ctx.uid,
+      });
+    }
+    tx.create(ref.collection("aiLog").doc(), {
+      input,
+      output: data.output,
+      model: data.model.trim(),
+      savedBy: ctx.uid,
+      createdAt: FieldValue.serverTimestamp(),
+    });
+    auditEvent(db, tx, { type: "ai_summary", messageId, actorId: ctx.uid, saved: summary !== null });
+  });
+  return { messageId, saved: summary !== null };
+}
+
 // FR-21: internal sweep for expired locks. Called by a scheduler later (phase 5);
 // until then expired locks are already treated as free by the queue and the lock
 // and decision checks, so this only tidies data and records the audit.
@@ -317,5 +427,6 @@ module.exports = {
   lockMessage,
   decideMessage,
   releaseLock,
+  saveAiSummary,
   releaseExpiredLocks,
 };

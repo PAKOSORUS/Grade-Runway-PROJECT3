@@ -40,6 +40,7 @@ exports.listReviewQueue = wrap(chat.listReviewQueue);
 exports.lockMessage = wrap(chat.lockMessage);
 exports.decideMessage = wrap(chat.decideMessage);
 exports.releaseLock = wrap(chat.releaseLock);
+exports.saveAiSummary = wrap(chat.saveAiSummary);
 // releaseExpiredLocks is internal; a scheduler will call it in phase 5.
 exports.registerSelf = wrap(register.registerSelf);
 exports.getMyProfile = wrap(register.getMyProfile);
