@@ -34,7 +34,7 @@ npm run emulators                                           # เปิด emula
 
 ### โครงสร้างโฟลเดอร์
 - `web/login/` หน้าเข้าสู่ระบบ/สมัครบัญชี (Firebase Auth) ทุกหน้าอื่นเด้งมาที่นี่ถ้าไม่ล็อกอิน และหลังล็อกอินไปหน้าตามบทบาท (admin → `admin/`, lecturer → `review-queue/`, นอกนั้น → `dashboard/`) เรียก `registerSelf`/`getMyProfile`
-- `web/shared/` ใช้ร่วมกันทุกหน้า (ต้อง serve จาก `web/` เพราะ import ข้ามโฟลเดอร์): `roles.js` ตารางหน้า ↔ บทบาทตาม `ACL.md` (ไม่มี DOM/import ทดสอบใน `functions/test/roles.test.js`), `nav.js` (`homeFor`, `goHome`, `goToLogin` คง hash `#emulator`), `guard.js` (`enterPage` อ่านบทบาทจาก `getMyProfile` ทุกครั้งที่โหลดหน้า ไม่เก็บใน storage แล้วกันหน้า/แสดงเมนู) หน้าใหม่ต้องมี `<nav id="nav" hidden></nav>` ใต้ `<header>` และเรียก `enterPage` ก่อนโหลดข้อมูล
+- `web/shared/` ใช้ร่วมกันทุกหน้า (ต้อง serve จาก `web/` เพราะ import ข้ามโฟลเดอร์): `roles.js` ตารางหน้า ↔ บทบาทตาม `ACL.md` (ไม่มี DOM/import ทดสอบใน `functions/test/roles.test.js`), `nav.js` (`homeFor`, `goHome`, `goToLogin` คง hash `#emulator`), `guard.js` (`enterPage` อ่านบทบาทจาก `getMyProfile` ทุกครั้งที่โหลดหน้า ไม่เก็บใน storage แล้วกันหน้า/แสดงเมนู), `ai.js` (`analyzeNegative(content)` เรียก OpenRouter ด้วยคีย์จาก `openrouter-config.js` ส่งแค่เนื้อหาข้อความ timeout 15 วินาที, `summarizeMessage(content, previous)` สรุปให้ผู้ตรวจ timeout 25 วินาที ส่งแค่ `content` กับ `previous {content, reason}` ทดสอบ `parseNegative`/`parseSummary`/`buildSummaryInput` ใน `functions/test/ai.test.js`) หน้าใหม่ต้องมี `<nav id="nav" hidden></nav>` ใต้ `<header>` และเรียก `enterPage` ก่อนโหลดข้อมูล
 - `web/admin/` หน้า Admin: นโยบายระบบ, กฎ threshold, นำเข้าข้อมูลการเรียน, บัญชีและบทบาท, ความสัมพันธ์ครู-ผู้เรียน (กำหนด/ยุติ/โอน + ตารางความสัมพันธ์ที่มีอยู่ทั้ง `active` และ `ended` จาก `listAssignments`), ประวัติการเปลี่ยนแปลง
 - `web/dashboard/` หน้าผู้เรียน (ดูสถานการณ์การเรียนของตน) และครูที่ปรึกษา (ดูผู้เรียนในความดูแล อ่านอย่างเดียว) บัญชีที่มีบทบาท `student` เห็นฟอร์มส่งข้อความแนะนำ (`sendMessage`) และรายการข้อความของตน (`listMyMessages`: สถานะ + เหตุผลถ้าถูกปฏิเสธ ไม่มีข้อมูลผู้ตรวจ) ฟอร์มตัดสินว่าแสดงหรือไม่จาก `getMyProfile`
 - `web/review-queue/` หน้าผู้ตรวจ (lecturer/admin): ล็อกข้อความ ระบุเชิงลบ/ไม่เชิงลบ อนุมัติ/ปฏิเสธ ปลดล็อก และเก็บ `firebase-config.js` ที่สามหน้าใช้ร่วมกัน
@@ -46,9 +46,10 @@ npm run emulators                                           # เปิด emula
 |---|---|
 | `users/{authUid}` | `name`, `email`, `roles[]`, `status`, `source` (`admin` | `self`) |
 | `advisorAssignments` | `advisorId`, `learnerId`, `advisorName`, `learnerName`, `status`, `source` |
-| `chatMessages` | `senderId`, `senderName`, `content`, `status`, `sentAt`, `resubmitOfId`, `decision {reviewerId, outcome, negative, reason, at}` |
+| `chatMessages` | `senderId`, `senderName`, `content`, `status`, `sentAt`, `resubmitOfId`, `decision {reviewerId, outcome, negative, reason, at}`, `aiSuggestion {topic, cautions[], addressedPreviousReason}` + `aiSuggestionAt`/`aiSuggestionBy` (สรุป AI ล่าสุด เขียนทับได้ ผ่าน `saveAiSummary` เท่านั้น ห้ามส่งให้ student) |
+| `chatMessages/{id}/aiLog` | `input` (เฉพาะ `content` + `previous {content, reason}` ไม่มีชื่อ/id), `output`, `model`, `savedBy`, `createdAt` เพิ่มอย่างเดียวต่อการเรียก AI หนึ่งครั้ง ไม่มี rule ใดตรงกัน client ถูกปฏิเสธทั้งหมด |
 | `reviewLocks/{messageId}` | `holderId`, `token`, `expiresAt` (มีเฉพาะตอนถูกล็อก) |
-| `auditEvents` | `type` (`lock`, `resubmit`, `review_decision`, `decision_rejected`, `unlock_manual`, `unlock_expired`), `at` |
+| `auditEvents` | `type` (`lock`, `resubmit`, `review_decision`, `decision_rejected`, `unlock_manual`, `unlock_expired`, `ai_summary`), `at` |
 | `configChangeAudits` | `category` (`account`, `advisorAssignment`, `systemPolicy`, `threshold`), `action`, `targetId`, `actorId`, `before`, `after`, `at` |
 | `notifications` | `recipientId`, `type` (`message_rejected`, `decision_rejected`, `risk`, `syncFailed`), `reason`, `read`, `at` |
 | `eligibilityResults/{learnerId}` | `eligible` (โค้ดอ่านอย่างเดียว ยังไม่มีโค้ดที่เขียน ข้อมูลมาจาก seed) |
@@ -80,7 +81,7 @@ npm run emulators                                           # เปิด emula
 - ปุ่ม/เมนู/รั้วหน้าฝั่งเว็บเป็นแค่ความสะดวก ห้ามถือเป็นการป้องกัน และห้ามเก็บ roles ไว้ใน localStorage/sessionStorage
 - ผู้ตรวจห้ามตรวจข้อความที่ตัวเองส่ง: `lockMessage`/`decideMessage` ปฏิเสธ (`permission-denied`) เมื่อ `senderId` ตรงกับผู้เรียก ไม่ว่าถือบทบาทอะไร (`listReviewQueue` ส่ง `ownMessage` ให้หน้าจอปิดปุ่มล็อก)
 - `decideMessage` แก้ได้แค่ `status` กับ `decision` ของข้อความ ห้ามแตะ `content`, `senderId`, `senderName`, `sentAt`, `resubmitOfId` (มีเทสต์ใน `chat.test.js` คุมไว้)
-- ห้าม commit `web/review-queue/firebase-config.js`, ไฟล์ `.env`/`.env.*` และ service account key (`.gitignore` ครอบคลุม `firebase-config.js`, `serviceAccount*.json`, `*.json.key` แต่**ยังไม่ครอบคลุม `.env`**)
+- ห้าม commit `web/review-queue/firebase-config.js`, `web/shared/openrouter-config.js` (คีย์ OpenRouter ฝั่งเบราว์เซอร์ ไม่ถูก deploy ตาม `firebase.json`), ไฟล์ `.env`/`.env.*` และ service account key (`.gitignore` ครอบคลุม `firebase-config.js`, `serviceAccount*.json`, `*.json.key` แต่**ยังไม่ครอบคลุม `.env`**)
 - ห้ามแก้ `firebase/firestore.rules` ให้หลวมลง (เช่น ให้ client เขียนได้ หรือให้ `student` อ่าน `chatMessages` ตรง) ต้องผ่าน `functions/test/rules.test.js` และบอกผู้ใช้ก่อนเสมอ
 - ข้อความที่ `rejected` ห้ามแก้ ปิดถาวร ผู้ส่งต้องสร้างข้อความใหม่ผ่าน `resubmitMessage` (ครั้งละหนึ่ง)
 - `auditEvents` และ `configChangeAudits` เพิ่มอย่างเดียว ห้ามลบหรือแก้ (เขียนใน transaction เดียวกับการเปลี่ยนข้อมูลเสมอ)
