@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ทดสอบ AI (OpenRouter)</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+    button { padding: .5rem 1rem; font-size: 1rem; }
+    pre { white-space: pre-wrap; background: #f4f4f4; padding: 1rem; border-radius: 6px; min-height: 3rem; }
+    .err { color: #b00020; }
+  </style>
+</head>
+<body>
+  <h1>ทดสอบ AI (หน้าชั่วคราว)</h1>
+  <p>โมเดล: <code id="model"></code></p>
+  <button id="send">ส่งข้อความ "สวัสดี"</button>
+  <pre id="out" aria-live="polite">ยังไม่มีคำตอบ</pre>
+  <script type="module">
+    const out = document.getElementById("out");
+    const btn = document.getElementById("send");
+    let cfg;
+    try {
+      cfg = await import("../shared/openrouter-config.js");
+      document.getElementById("model").textContent = cfg.OPENROUTER_MODEL;
+    } catch {
+      out.className = "err";
+      out.textContent = "ไม่พบ openrouter-config.js (คัดลอก web/shared/openrouter-config.example.js เป็น web/shared/openrouter-config.js แล้วใส่คีย์)";
+      btn.disabled = true;
+    }
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      out.className = "";
+      out.textContent = "กำลังรอคำตอบ...";
+      try {
+        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${cfg.OPENROUTER_API_KEY}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: cfg.OPENROUTER_MODEL,
+            messages: [{ role: "user", content: "สวัสดี" }]
+          })
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error?.message || `HTTP ${res.status}`);
+        out.textContent = json.choices?.[0]?.message?.content ?? JSON.stringify(json, null, 2);
+      } catch (e) {
+        out.className = "err";
+        out.textContent = `ผิดพลาด: ${e.message}`;
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
