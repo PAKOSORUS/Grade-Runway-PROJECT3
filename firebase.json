@@ -10,7 +10,8 @@
       "**/.*",
       "**/node_modules/**",
       "**/README.md",
-      "**/*.example.js"
+      "**/*.example.js",
+      "**/openrouter-config.js"
     ]
   },
   "functions": [

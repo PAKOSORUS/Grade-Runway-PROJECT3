@@ -12,3 +12,4 @@ functions/.env
 *-key.json
 .firebase/
 web/review-queue/firebase-config.js
+web/shared/openrouter-config.js
