@@ -23,6 +23,7 @@ import {
 
 import { goToLogin } from "../shared/nav.js";
 import { enterPage } from "../shared/guard.js";
+import { analyzeNegative, summarizeMessage, AiError } from "../shared/ai.js";
 
 const messageEl = document.getElementById("message");
 const listEl = document.getElementById("list");
@@ -118,6 +119,116 @@ function decisionForm(item, lock, errorBox) {
     group.appendChild(wrap);
   }
   form.appendChild(group);
+
+  // AI suggestion: only ticks a radio. It never approves/rejects, and its errors stay
+  // in this box (not run()), so no refresh happens and the reviewer's radio/reason survive.
+  const aiBox = el("div", "ai-box");
+  const aiNote = el("p", "ai-note");
+  aiNote.setAttribute("role", "status");
+  const aiButton = el("button", "secondary", "ให้ AI ช่วยวิเคราะห์");
+  aiButton.type = "button";
+  aiButton.addEventListener("click", async () => {
+    if (aiButton.disabled) return;
+    aiButton.disabled = true;
+    aiButton.textContent = "กำลังวิเคราะห์…";
+    aiNote.className = "ai-note";
+    aiNote.replaceChildren();
+    try {
+      // item.content only — never the sender name.
+      const result = await analyzeNegative(item.content ?? "");
+      if (result === null) {
+        aiNote.className = "ai-note ai-error";
+        aiNote.textContent = "AI จัดให้ไม่ได้ — โปรดเลือกเอง";
+      } else {
+        radios[String(result)].checked = true;
+        const answer = el("strong", "", result ? "เชิงลบ" : "ไม่เชิงลบ");
+        aiNote.append(document.createTextNode("ข้อเสนอจาก AI — โปรดตรวจสอบก่อนยืนยัน "), answer);
+      }
+    } catch (err) {
+      aiNote.className = "ai-note ai-error";
+      aiNote.textContent = err instanceof AiError ? err.message : "เรียก AI ไม่สำเร็จ — โปรดเลือกเอง";
+      if (!(err instanceof AiError)) console.error(err);
+    } finally {
+      aiButton.disabled = false;
+      aiButton.textContent = "ให้ AI ช่วยวิเคราะห์";
+    }
+  });
+  aiBox.append(aiButton, aiNote);
+  form.appendChild(aiBox);
+
+  // AI summary for the reviewer to read before deciding. It never touches the radios or
+  // the decision buttons, and errors stay in its own box (not run()), so nothing is
+  // refreshed and what the reviewer typed or picked is kept. After a successful call the
+  // summary and exactly what was sent are saved through saveAiSummary (needs this lock).
+  const sumBox = el("div", "ai-box");
+  const sumOut = el("div", "ai-summary");
+  sumOut.setAttribute("role", "status");
+  const sumButton = el("button", "secondary", "ให้ AI ช่วยสรุป");
+  sumButton.type = "button";
+
+  const showSummary = (s, heading) => {
+    sumOut.className = "ai-summary";
+    sumOut.replaceChildren(el("p", "ai-note", heading), el("p", "ai-note", `เกี่ยวกับ: ${s.topic}`));
+    if (s.cautions.length > 0) {
+      const ul = el("ul", "ai-cautions");
+      for (const c of s.cautions) ul.appendChild(el("li", "", c));
+      sumOut.append(el("p", "ai-note", "ควรระวังก่อนเผยแพร่:"), ul);
+    } else {
+      sumOut.appendChild(el("p", "ai-note", "ควรระวังก่อนเผยแพร่: ไม่พบ"));
+    }
+    if (item.previous) {
+      const a = s.addressedPreviousReason;
+      const text = a === true ? "แก้ตามเหตุผลเดิมแล้ว" : a === false ? "ยังไม่ได้แก้ตามเหตุผลเดิม" : "AI ตัดสินไม่ได้ว่าแก้ตามเหตุผลเดิมแล้วหรือยัง";
+      sumOut.appendChild(el("p", "ai-note", `ข้อความส่งใหม่: ${text}`));
+    }
+  };
+  // a summary saved earlier (e.g. before a reload) is shown again
+  if (item.aiSuggestion) showSummary(item.aiSuggestion, `สรุปจาก AI ที่บันทึกไว้ (${formatTime(item.aiSuggestionAt)}) — โปรดตรวจสอบก่อนยืนยัน`);
+
+  sumButton.addEventListener("click", async () => {
+    if (sumButton.disabled) return;
+    sumButton.disabled = true;
+    sumButton.textContent = "กำลังวิเคราะห์…";
+    sumOut.className = "ai-summary";
+    sumOut.replaceChildren();
+    try {
+      // item.content and item.previous (content + reason) only — never the sender name.
+      const result = await summarizeMessage(item.content ?? "", item.previous);
+      if (result.summary) showSummary(result.summary, "สรุปจาก AI — โปรดตรวจสอบก่อนยืนยัน");
+      else {
+        sumOut.className = "ai-summary ai-error";
+        sumOut.textContent = "AI สรุปให้ไม่ได้ — โปรดอ่านข้อความเอง";
+      }
+      let saveError = null;
+      try {
+        await call.saveAiSummary({
+          messageId: item.id,
+          token: lock.token,
+          summary: result.summary,
+          input: result.input,
+          output: result.output,
+          model: result.model,
+        });
+      } catch (err) {
+        console.error(err);
+        saveError = errorText(err);
+      }
+      sumOut.appendChild(
+        saveError
+          ? el("p", "ai-note ai-error", `บันทึกสรุปไม่สำเร็จ: ${saveError}`)
+          : el("p", "ai-note muted", "บันทึกสรุปแล้ว")
+      );
+    } catch (err) {
+      sumOut.className = "ai-summary ai-error";
+      sumOut.textContent = err instanceof AiError ? err.message : "เรียก AI ไม่สำเร็จ — โปรดอ่านข้อความเอง";
+      if (!(err instanceof AiError)) console.error(err);
+    } finally {
+      sumButton.disabled = false;
+      sumButton.textContent = "ให้ AI ช่วยสรุป";
+    }
+  });
+  sumBox.append(sumButton, sumOut);
+  form.appendChild(sumBox);
 
   const reasonLabel = el("label", "field", "เหตุผล (จำเป็นเมื่อปฏิเสธ)");
   const reason = document.createElement("textarea");
@@ -272,7 +383,7 @@ async function main() {
     connectFunctionsEmulator(functions, "127.0.0.1", 5001);
     document.getElementById("mode").hidden = false;
   }
-  for (const name of ["listReviewQueue", "lockMessage", "decideMessage", "releaseLock", "getMyProfile"]) {
+  for (const name of ["listReviewQueue", "lockMessage", "decideMessage", "releaseLock", "saveAiSummary", "getMyProfile"]) {
     call[name] = httpsCallable(functions, name);
   }
 
