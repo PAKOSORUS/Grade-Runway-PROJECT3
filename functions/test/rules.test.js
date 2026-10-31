@@ -72,3 +72,20 @@ test("a user cannot grant themselves a role by writing users", async () => {
   await assertFails(as("stu").doc("users/stu").update({ roles: ["admin"] }));
   await assertFails(as("stu").doc("users/stu2").set({ roles: ["admin"], status: "active" }));
 });
+
+test("chatMessages/{id}/aiLog is closed to every client, reviewers included; aiSuggestion cannot be written either", async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await ctx.firestore().doc("chatMessages/m1/aiLog/l1").set({ input: { content: "x" }, output: "y", model: "m" });
+  });
+  for (const uid of ["lec", "adm", "stu", "adv", "off", "ghost"]) {
+    const db = as(uid);
+    await assertFails(db.doc("chatMessages/m1/aiLog/l1").get());
+    await assertFails(db.collection("chatMessages/m1/aiLog").get());
+    await assertFails(db.collectionGroup("aiLog").get());
+    await assertFails(db.doc("chatMessages/m1/aiLog/l1").set({ input: {}, output: "z", model: "m" }));
+    await assertFails(db.doc("chatMessages/m1/aiLog/l2").set({ input: {}, output: "z", model: "m" }));
+    await assertFails(db.doc("chatMessages/m1/aiLog/l1").delete());
+    await assertFails(db.doc("chatMessages/m1").update({ aiSuggestion: { topic: "x" } }));
+  }
+  await assertFails(anon().doc("chatMessages/m1/aiLog/l1").get());
+});

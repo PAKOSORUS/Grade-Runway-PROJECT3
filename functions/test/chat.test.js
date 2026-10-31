@@ -368,3 +368,180 @@ test("a lecturer who never sent the message is not affected by the self-review r
   const { token } = await chat.lockMessage(db, R1, { messageId: id }, { now: at(1) });
   assert.equal((await chat.decideMessage(db, R1, { messageId: id, token, outcome: "approve", negative: true }, { now: at(2) })).status, "approved");
 });
+
+test("review queue: a resubmission carries the rejected original's content and reason, nothing identifying", async () => {
+  const first = await sent(S1, "ข้อความแรก");
+  const plain = await sent(S1, "ข้อความธรรมดา");
+  const { token } = await chat.lockMessage(db, R1, { messageId: first }, { now: at(0) });
+  await chat.decideMessage(db, R1, { messageId: first, token, outcome: "reject", negative: true, reason: "ภาษาไม่สุภาพ" }, { now: at(1) });
+  const second = (await chat.resubmitMessage(db, S1, { originalId: first, content: "ข้อความที่แก้แล้ว" })).messageId;
+
+  const queue = await chat.listReviewQueue(db, R2, {}, { now: at(2) });
+  assert.equal(queue.some((q) => q.id === first), false);
+  assert.deepEqual(queue.find((q) => q.id === second).previous, { content: "ข้อความแรก", reason: "ภาษาไม่สุภาพ" });
+  assert.equal(queue.find((q) => q.id === plain).previous, null);
+  for (const item of queue) {
+    if (item.previous) assert.deepEqual(Object.keys(item.previous).sort(), ["content", "reason"]);
+  }
+});
+
+// ---- saveAiSummary (AI summary kept on the message + append-only aiLog) ----
+
+const SUMMARY = { topic: "แนะนำการทบทวนบทเรียน", cautions: ["ภาษาค่อนข้างแรง"], addressedPreviousReason: null };
+const aiArgs = (messageId, token, over = {}) => ({
+  messageId,
+  token,
+  summary: SUMMARY,
+  input: { content: "แนะนำให้ทบทวนทุกวัน" },
+  output: '{"topic":"แนะนำการทบทวนบทเรียน"}',
+  model: "google/gemini-2.5-flash-lite",
+  ...over,
+});
+const aiLogs = async (id) =>
+  (await db.collection("chatMessages").doc(id).collection("aiLog").orderBy("createdAt", "asc").get()).docs.map((d) => d.data());
+
+test("saveAiSummary: lock holder stores aiSuggestion + an aiLog entry + audit; status and decision untouched", async () => {
+  const id = await sent();
+  const { token } = await chat.lockMessage(db, R1, { messageId: id }, { now: at(0) });
+  const before = await msg(id);
+  assert.deepEqual(await chat.saveAiSummary(db, R1, aiArgs(id, token), { now: at(1) }), { messageId: id, saved: true });
+
+  const m = await msg(id);
+  assert.deepEqual(m.aiSuggestion, SUMMARY);
+  assert.equal(m.aiSuggestionBy, "rev-1");
+  assert.ok(m.aiSuggestionAt);
+  assert.equal(m.status, "pending");
+  assert.equal(m.decision, undefined);
+  for (const k of ["content", "senderId", "senderName", "sentAt", "resubmitOfId"]) {
+    assert.deepEqual(m[k] ?? null, before[k] ?? null, k);
+  }
+
+  const logs = await aiLogs(id);
+  assert.equal(logs.length, 1);
+  assert.deepEqual(logs[0].input, { content: "แนะนำให้ทบทวนทุกวัน" });
+  assert.equal(logs[0].output, '{"topic":"แนะนำการทบทวนบทเรียน"}');
+  assert.equal(logs[0].model, "google/gemini-2.5-flash-lite");
+  assert.equal(logs[0].savedBy, "rev-1");
+  assert.ok(logs[0].createdAt);
+  assert.equal(JSON.stringify(logs[0]).includes("Student 1"), false);
+  assert.equal(JSON.stringify(logs[0]).includes("stu-1"), false);
+
+  const ev = await events("ai_summary");
+  assert.equal(ev.length, 1);
+  assert.equal(ev[0].messageId, id);
+  assert.equal(ev[0].actorId, "rev-1");
+  assert.equal((await lockOf(id)).holderId, "rev-1");
+});
+
+test("saveAiSummary: a second call overwrites aiSuggestion but never the earlier aiLog entry; null summary only logs", async () => {
+  const id = await sent();
+  const { token } = await chat.lockMessage(db, R1, { messageId: id }, { now: at(0) });
+  await chat.saveAiSummary(db, R1, aiArgs(id, token), { now: at(1) });
+  const second = { topic: "สรุปครั้งที่สอง", cautions: [], addressedPreviousReason: null };
+  await chat.saveAiSummary(db, R1, aiArgs(id, token, { summary: second, output: "out-2" }), { now: at(2) });
+  assert.deepEqual((await msg(id)).aiSuggestion, second);
+  let logs = await aiLogs(id);
+  assert.equal(logs.length, 2);
+  assert.equal(logs[0].output, '{"topic":"แนะนำการทบทวนบทเรียน"}');
+  assert.equal(logs[1].output, "out-2");
+
+  // the AI answered in an unusable shape: logged, but the last good summary stays
+  const res = await chat.saveAiSummary(db, R1, aiArgs(id, token, { summary: null, output: "ไม่ใช่ JSON" }), { now: at(3) });
+  assert.equal(res.saved, false);
+  assert.deepEqual((await msg(id)).aiSuggestion, second);
+  logs = await aiLogs(id);
+  assert.equal(logs.length, 3);
+  assert.equal(logs[2].output, "ไม่ใช่ JSON");
+});
+
+test("saveAiSummary: needs the live lock and its token, a reviewer who did not send it, and a pending message", async () => {
+  const id = await sent();
+  // a message the reviewer sent (they also hold a student role in this scenario), with a live lock
+  const own = (await db.collection("chatMessages").add({ senderId: "rev-1", senderName: "Reviewer 1", content: "ของผู้ตรวจเอง", status: "pending", sentAt: Timestamp.fromDate(at(0)), resubmitOfId: null })).id;
+  await db.collection("reviewLocks").doc(own).set({ holderId: "rev-1", token: "t-own", expiresAt: Timestamp.fromDate(at(30)) });
+  assert.equal(await code(chat.saveAiSummary(db, R1, aiArgs(id, "x"), { now: at(0) })), "failed-precondition"); // no lock
+  const { token } = await chat.lockMessage(db, R1, { messageId: id }, { now: at(0) });
+  assert.equal(await code(chat.saveAiSummary(db, R1, aiArgs(id, "wrong"), { now: at(1) })), "failed-precondition");
+  assert.equal(await code(chat.saveAiSummary(db, R2, aiArgs(id, token), { now: at(1) })), "failed-precondition"); // someone else's lock
+  assert.equal(await code(chat.saveAiSummary(db, R1, aiArgs(id, token), { now: at(60) })), "failed-precondition"); // expired
+  assert.equal(await code(chat.saveAiSummary(db, S1, aiArgs(id, token), { now: at(1) })), "permission-denied");
+  assert.equal(await code(chat.saveAiSummary(db, null, aiArgs(id, token), { now: at(1) })), "unauthenticated");
+  assert.equal(await code(chat.saveAiSummary(db, R1, aiArgs("nope", token), { now: at(1) })), "not-found");
+  assert.equal(await code(chat.saveAiSummary(db, R1, aiArgs(own, "t-own"), { now: at(1) })), "permission-denied"); // own message, even with a live lock
+  assert.equal((await msg(id)).aiSuggestion, undefined);
+  assert.equal((await aiLogs(id)).length, 0);
+  assert.equal((await events("ai_summary")).length, 0);
+
+  // after the decision the message is no longer pending
+  const l = await chat.lockMessage(db, R1, { messageId: id }, { now: at(2) });
+  await chat.decideMessage(db, R1, { messageId: id, token: l.token, outcome: "approve", negative: false }, { now: at(3) });
+  assert.equal(await code(chat.saveAiSummary(db, R1, aiArgs(id, l.token), { now: at(4) })), "failed-precondition");
+});
+
+test("saveAiSummary: input may hold message text only; malformed fields are refused and nothing is written", async () => {
+  const id = await sent();
+  const { token } = await chat.lockMessage(db, R1, { messageId: id }, { now: at(0) });
+  const bad = [
+    { input: { content: "x", senderName: "Student 1" } },
+    { input: { content: "x", senderId: "stu-1" } },
+    { input: { content: "x", previous: { content: "o", reason: "r", senderName: "S" } } },
+    { input: { content: "x", previous: { content: "o" } } },
+    { input: { content: "  " } },
+    { input: "text" },
+    { summary: undefined },
+    { summary: { topic: "", cautions: [], addressedPreviousReason: null } },
+    { summary: { topic: "t", cautions: "no", addressedPreviousReason: null } },
+    { summary: { topic: "t", cautions: [], addressedPreviousReason: "yes" } },
+    { summary: { ...SUMMARY, status: "approved" } },
+    { summary: { topic: "ก".repeat(301), cautions: [], addressedPreviousReason: null } },
+    { summary: { topic: "t", cautions: Array(6).fill("c"), addressedPreviousReason: null } },
+    { output: 5 },
+    { output: "x".repeat(5001) },
+    { model: "" },
+  ];
+  for (const over of bad) {
+    assert.equal(await code(chat.saveAiSummary(db, R1, aiArgs(id, token, over), { now: at(1) })), "invalid-argument", JSON.stringify(over));
+  }
+  assert.equal(await code(chat.saveAiSummary(db, R1, aiArgs(id, undefined), { now: at(1) })), "invalid-argument");
+  assert.equal((await msg(id)).aiSuggestion, undefined);
+  assert.equal((await aiLogs(id)).length, 0);
+  // a resubmission's previous message text is allowed
+  const ok = { input: { content: "ใหม่", previous: { content: "เดิม", reason: "สุภาพขึ้น" } } };
+  assert.equal((await chat.saveAiSummary(db, R1, aiArgs(id, token, ok), { now: at(1) })).saved, true);
+});
+
+test("aiSuggestion survives the decision; the reviewer queue shows it", async () => {
+  const id = await sent();
+  const { token } = await chat.lockMessage(db, R1, { messageId: id }, { now: at(0) });
+  await chat.saveAiSummary(db, R1, aiArgs(id, token), { now: at(1) });
+  const q = await chat.listReviewQueue(db, R1, {}, { now: at(2) });
+  assert.deepEqual(q.find((x) => x.id === id).aiSuggestion, SUMMARY);
+  assert.ok(q.find((x) => x.id === id).aiSuggestionAt);
+
+  await chat.decideMessage(db, R1, { messageId: id, token, outcome: "reject", negative: true, reason: "ไม่สุภาพ" }, { now: at(3) });
+  const m = await msg(id);
+  assert.equal(m.status, "rejected");
+  assert.equal(m.decision.reason, "ไม่สุภาพ");
+  assert.deepEqual(m.aiSuggestion, SUMMARY);
+});
+
+test("students never receive aiSuggestion: not in listMyMessages, not in listApprovedMessages", async () => {
+  const rejected = await sent(S1, "ข้อความที่จะถูกปฏิเสธ");
+  const approved = await sent(S1, "ข้อความที่จะอนุมัติ");
+  for (const [id, outcome] of [[rejected, "reject"], [approved, "approve"]]) {
+    const { token } = await chat.lockMessage(db, R1, { messageId: id }, { now: at(0) });
+    await chat.saveAiSummary(db, R1, aiArgs(id, token, { summary: { ...SUMMARY, topic: "ความลับของผู้ตรวจ" } }), { now: at(1) });
+    await chat.decideMessage(db, R1, { messageId: id, token, outcome, negative: outcome === "reject", reason: outcome === "reject" ? "r" : undefined }, { now: at(2) });
+    assert.equal((await msg(id)).aiSuggestion.topic, "ความลับของผู้ตรวจ");
+  }
+  const mine = await chat.listMyMessages(db, S1, {});
+  assert.equal(mine.length, 2);
+  const shown = await chat.listApprovedMessages(db, S1, {});
+  assert.equal(shown.length, 1);
+  for (const item of [...mine, ...shown]) {
+    assert.equal(Object.keys(item).some((k) => k.startsWith("aiSuggestion")), false);
+  }
+  const wire = JSON.stringify([mine, shown]);
+  assert.equal(wire.includes("ความลับของผู้ตรวจ"), false);
+  assert.equal(wire.includes("aiSuggestion"), false);
+});

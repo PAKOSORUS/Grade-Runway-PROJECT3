@@ -10,7 +10,8 @@
       "**/.*",
       "**/node_modules/**",
       "**/README.md",
-      "**/*.example.js"
+      "**/*.example.js",
+      "**/openrouter-config.js"
     ]
   },
   "functions": [
@@ -23,6 +24,6 @@
     "auth": { "port": 9099 },
     "firestore": { "port": 8080 },
     "functions": { "port": 5001 },
-    "ui": { "enabled": false }
+    "ui": { "enabled": true, "port": 4000 }
   }
 }
