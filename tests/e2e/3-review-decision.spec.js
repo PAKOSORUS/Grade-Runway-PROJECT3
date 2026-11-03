@@ -47,15 +47,58 @@ test.describe("3. review queue decision form + student result (spec 3, 5.1, 7, 8
     await expect(card(page, MSG_C)).toBeVisible();
   });
 
-  test("reject with a reason removes the message from the queue", async ({ page }) => {
+  test("reject without a reason (empty, whitespace only) sends no decideMessage request", async ({ page }) => {
+    await login(page, "reviewer1", "/review-queue/");
+    // lock again (token is lost on reload); lock/list requests happen before the counter starts
+    await card(page, MSG_C).getByRole("button", { name: /ล็อก/ }).click();
+    const c = card(page, MSG_C);
+    await expect(c.getByRole("button", { name: /ปฏิเสธ/ })).toBeVisible();
+    await c.locator("input[type=radio][value=true]").check();
+
+    // count only decideMessage calls, started before the reject click
+    let decideCalls = 0;
+    page.on("request", (req) => {
+      if (req.url().includes("decideMessage")) decideCalls++;
+    });
+
+    // (a) empty reason
+    await c.locator("textarea").fill("");
+    await c.getByRole("button", { name: /ปฏิเสธ/ }).click();
+    await expect(c.locator(".inline-error")).toHaveText("การปฏิเสธต้องระบุเหตุผล");
+    await page.waitForTimeout(1000);
+    expect(decideCalls).toBe(0);
+
+    // (b) whitespace-only reason
+    await c.locator("textarea").fill("   ");
+    await c.getByRole("button", { name: /ปฏิเสธ/ }).click();
+    await expect(c.locator(".inline-error")).toHaveText("การปฏิเสธต้องระบุเหตุผล");
+    await page.waitForTimeout(1000);
+    expect(decideCalls).toBe(0);
+    await expect(card(page, MSG_C)).toBeVisible();
+  });
+
+  test("student side: the message rejected without a reason is still pending, no reason line, no resubmit", async ({ page }) => {
+    await login(page, "student1", "/dashboard/");
+    const mineMsg = page.locator("#myMessages .msg", { hasText: MSG_C });
+    await expect(mineMsg.locator(".badge")).toHaveText("รออนุมัติ", { timeout: 20000 });
+    await expect(mineMsg).not.toContainText("เหตุผลที่ปฏิเสธ");
+    await expect(mineMsg.getByRole("button", { name: "ส่งใหม่" })).toHaveCount(0);
+  });
+
+  test("reject with a reason removes the message from the queue (control: interceptor sees 1 decideMessage)", async ({ page }) => {
     await login(page, "reviewer1", "/review-queue/");
     // lock is kept on the server; the page lost its token on reload, so lock again
     await card(page, MSG_C).getByRole("button", { name: /ล็อก/ }).click();
     const c = card(page, MSG_C);
     await c.locator("input[type=radio][value=true]").check();
     await c.locator("textarea").fill("เนื้อหาลดกำลังใจผู้อ่าน");
+    let decideCalls = 0;
+    page.on("request", (req) => {
+      if (req.url().includes("decideMessage")) decideCalls++;
+    });
     await c.getByRole("button", { name: /ปฏิเสธ/ }).click();
     await expect(card(page, MSG_C)).toHaveCount(0);
+    expect(decideCalls).toBe(1);
   });
 
   test("approve not-negative, and approve a negative one by the reviewer's own choice", async ({ page }) => {
