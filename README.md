@@ -1,12 +1,27 @@
 # Grade Runway
 
-**เว็บออนไลน์:** https://grade-runway-project.web.app
+🌐 เว็บออนไลน์: https://grade-runway-project.web.app
+📊 ผลการทดสอบ: [test-results.md](test-results.md)
 
 ระบบติดตามความเสี่ยงการเรียนของผู้เรียน และแชทแนะนำแนวทางการเรียนระหว่างนักศึกษาที่ต้องผ่านการตรวจของอาจารย์/ผู้ดูแลระบบก่อนเผยแพร่ (งานรายวิชา)
 
 - ตารางสิทธิ์ของทั้ง 4 บทบาท: [ACL.md](ACL.md)
 - วิธีรันและโครงสร้างโค้ด: [CLAUDE.md](CLAUDE.md)
 - เว็บ rules และ indexes deploy แล้ว (hosting) ส่วน Cloud Functions ยังไม่ได้ deploy ดูหัวข้อ "URL ออนไลน์" ด้านล่าง
+
+## เอกสารและผู้ช่วยของ Module 2
+
+- ขอบเขตและโครงสร้างข้อมูลของ Module 2 (แชทแนะนำที่ผ่านการตรวจ + ระบบบัญชี/ล็อกอิน): [spec.md](spec.md)
+- งานที่ยังไม่เสร็จ ส่งต่อ Module 3: [BACKLOG.md](BACKLOG.md)
+
+ผู้ช่วย (custom agents) ของ Module 2 ใน [.claude/agents/](.claude/agents/):
+
+| ผู้ช่วย | โมเดล | หน้าที่ |
+|---|---|---|
+| [dashboard-chat-ui](.claude/agents/dashboard-chat-ui.md) | sonnet | ทำหน้าจอห้องรวมและปุ่ม "ส่งใหม่" ใน `/dashboard/` ตาม spec.md 8.2 (แก้ได้เฉพาะ `web/dashboard/`) |
+| [backend-rules-guard](.claude/agents/backend-rules-guard.md) | opus | ตรวจความปลอดภัย backend และ Rules แบบอ่านอย่างเดียว |
+| [ai-button-checker](.claude/agents/ai-button-checker.md) | haiku | ตรวจปุ่ม AI ในหน้าตรวจข้อความแบบอ่านอย่างเดียว |
+| [tester](.claude/agents/tester.md) | sonnet | ผู้ช่วยตัวที่ 4: เขียนและรันเทสต์ Playwright (เทสต์อยู่ที่ `tests/e2e/`) |
 
 ## Security Rules
 
