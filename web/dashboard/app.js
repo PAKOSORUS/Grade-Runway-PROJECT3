@@ -212,6 +212,8 @@ async function loadAll(roles) {
 // ---- advice messages (students only; FR-10, FR-11, FR-15) ----
 const STATUS_TEXT = { pending: "รออนุมัติ", approved: "อนุมัติแล้ว", rejected: "ถูกปฏิเสธ" };
 const NOT_ELIGIBLE = "ไม่ผ่านเกณฑ์ผู้ส่งข้อความ";
+// originalIds the user resubmitted in this page session (for the "resubmitted" notice)
+const resubmittedIds = new Set();
 
 function setSendStatus(text, kind) {
   $("sendStatus").textContent = text;
@@ -232,7 +234,101 @@ function renderMyMessages(list) {
     item.append(head, el("div", m.content, "content"));
     if (m.status === "rejected") item.append(el("div", `เหตุผลที่ปฏิเสธ: ${m.reason ?? "-"}`, "muted"));
     if (m.resubmitOfId) item.append(el("div", "ส่งใหม่จากข้อความที่ถูกปฏิเสธ", "muted"));
+    // notice for a resubmit made in this session, shown on the new message while it is still pending
+    if (m.resubmitOfId && resubmittedIds.has(m.resubmitOfId) && m.status === "pending") {
+      item.append(el("div", "ส่งใหม่แล้ว กำลังรอการอนุมัติ", "status ok"));
+    }
+    // resubmit: rejected messages only; hidden when a child that is not rejected is in the list
+    // (convenience only, the Backend decides)
+    const blocked = list.some((c) => c.resubmitOfId === m.id && c.status !== "rejected");
+    if (m.status === "rejected" && !blocked) item.append(resubmitControl(m.id));
     box.append(item);
+  }
+}
+
+function resubmitControl(originalId) {
+  const wrap = el("div", undefined, "resubmit");
+  const open = el("button", "ส่งใหม่");
+  open.type = "button";
+  const form = el("form");
+  form.hidden = true;
+  const label = el("label", "ข้อความใหม่ ", "field wide");
+  const text = el("textarea");
+  text.rows = 3;
+  text.maxLength = 2000;
+  text.required = true;
+  label.append(text);
+  const send = el("button", "ส่งข้อความใหม่");
+  send.type = "submit";
+  const status = el("div", undefined, "status");
+  status.setAttribute("role", "alert");
+  form.append(label, el("div", undefined, "row"), status);
+  form.children[1].append(send);
+  open.addEventListener("click", () => {
+    form.hidden = !form.hidden;
+  });
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const content = text.value.trim();
+    if (!content) {
+      status.textContent = "ต้องระบุข้อความ";
+      status.className = "status error";
+      return;
+    }
+    if (content.length > 2000) {
+      status.textContent = "ข้อความต้องไม่เกิน 2000 ตัวอักษร";
+      status.className = "status error";
+      return;
+    }
+    status.textContent = "กำลังส่ง…";
+    status.className = "status";
+    send.disabled = true;
+    try {
+      await call.resubmitMessage({ originalId, content });
+      // the reload below rebuilds this form, so keep the notice for the new message it creates
+      resubmittedIds.add(originalId);
+      status.textContent = "ส่งใหม่แล้ว กำลังรอการอนุมัติ";
+      status.className = "status ok";
+      await loadMyMessages();
+    } catch (err) {
+      console.error(err);
+      send.disabled = false;
+      status.textContent =
+        err && err.message === NOT_ELIGIBLE
+          ? "ส่งไม่ได้: บัญชีนี้ยังไม่ผ่านเกณฑ์ผู้ส่งข้อความ (นักศึกษาที่เพิ่งสมัครต้องรอผลประเมินเกณฑ์ก่อน)"
+          : errorText(err);
+      status.className = "status error";
+    }
+  });
+  wrap.append(open, form);
+  return wrap;
+}
+
+// ---- shared room: approved messages as the Backend returns them (no filtering here) ----
+function renderRoom(list) {
+  const box = $("roomMessages");
+  box.replaceChildren();
+  if (list.length === 0) {
+    box.append(el("p", "ยังไม่มีข้อความในห้องรวม", "muted"));
+    return;
+  }
+  for (const m of list) {
+    const item = el("div", "", "msg");
+    const head = el("div");
+    // senderName only when the Backend sent it (policy showSenderName); never an id
+    if (m.senderName !== undefined && m.senderName !== null) head.append(el("strong", `${m.senderName} · `));
+    head.append(el("time", formatTime(m.sentAt)));
+    item.append(head, el("div", m.content, "content"));
+    box.append(item);
+  }
+}
+
+async function loadRoom() {
+  try {
+    renderRoom((await call.listApprovedMessages({})).data);
+  } catch (err) {
+    console.error(err);
+    $("roomMessages").replaceChildren(el("p", `โหลดข้อความไม่สำเร็จ: ${errorText(err)}`, "status error"));
   }
 }
 
@@ -251,7 +347,7 @@ async function loadChat(roles) {
   if (!roles.includes("student")) return;
   $("chatApp").hidden = false;
   setSendStatus("", "");
-  await loadMyMessages();
+  await Promise.all([loadMyMessages(), loadRoom()]);
 }
 
 async function sendAdvice(e) {
@@ -301,7 +397,7 @@ async function main() {
     connectFunctionsEmulator(functions, "127.0.0.1", 5001);
     $("mode").hidden = false;
   }
-  for (const name of ["getLearnerSituation", "getLearnerHistory", "listMyLearners", "getMyProfile", "sendMessage", "listMyMessages"]) {
+  for (const name of ["getLearnerSituation", "getLearnerHistory", "listMyLearners", "getMyProfile", "sendMessage", "listMyMessages", "listApprovedMessages", "resubmitMessage"]) {
     call[name] = httpsCallable(functions, name);
   }
   $("sendForm").addEventListener("submit", sendAdvice);

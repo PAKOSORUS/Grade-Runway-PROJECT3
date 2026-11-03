@@ -45,6 +45,9 @@
     .msg:last-child { border-bottom: 0; }
     .msg .content { white-space: pre-wrap; overflow-wrap: anywhere; margin: 4px 0; }
     .msg time { font-size: 0.8125rem; color: var(--color-text-muted); }
+    .resubmit { margin-top: 8px; }
+    .resubmit form { margin-top: 8px; }
+    .resubmit .row { margin-top: 8px; }
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.8125rem; font-weight: 600; margin-right: 8px; border: 1px solid; }
     .badge.pending { background: var(--status-warn-bg); border-color: var(--status-warn-line); color: var(--status-warn-text); }
     .badge.approved { background: var(--status-ok-bg); border-color: var(--status-ok-line); color: var(--status-ok-text); }
@@ -113,6 +116,11 @@
       <section class="card" aria-labelledby="h-mine">
         <h2 id="h-mine">ข้อความของฉัน</h2>
         <div id="myMessages"></div>
+      </section>
+      <section class="card" aria-labelledby="h-room">
+        <h2 id="h-room">ห้องรวม</h2>
+        <p class="note">ข้อความที่อาจารย์หรือผู้ดูแลระบบอนุมัติแล้ว</p>
+        <div id="roomMessages"></div>
       </section>
     </div>
 

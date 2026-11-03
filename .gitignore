@@ -13,3 +13,6 @@ functions/.env
 .firebase/
 web/review-queue/firebase-config.js
 web/shared/openrouter-config.js
+tests/e2e/node_modules/
+tests/e2e/.pw-output/
+tests/e2e/playwright-report/
