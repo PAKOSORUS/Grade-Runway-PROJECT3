@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./web/shared/openrouter-config.js)",
+      "Edit(./web/shared/openrouter-config.js)",
+      "Read(./web/review-queue/firebase-config.js)",
+      "Edit(./web/review-queue/firebase-config.js)",
+      "Read(**/.env)",
+      "Edit(**/.env)",
+      "Read(**/.env.*)",
+      "Edit(**/.env.*)",
+      "Read(**/serviceAccount*.json)",
+      "Edit(**/serviceAccount*.json)"
+    ]
+  }
+}
